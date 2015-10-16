@@ -146,50 +146,48 @@ static void console_cursor_wrap_offset(const char *str, int width, int *row, int
 	return;
 }
 
-static int console_textview_line_color(struct TextViewContext *tvc, unsigned char fg[3], unsigned char UNUSED(bg[3]))
+static void console_textview_cursor_coords(struct TextViewContext *tvc, int xy[2])
 {
-	ConsoleLine *cl_iter = (ConsoleLine *)tvc->iter;
-
-	/* annoying hack, to draw the prompt */
 	if (tvc->iter_index == 0) {
 		const SpaceConsole *sc = (SpaceConsole *)tvc->arg1;
 		const ConsoleLine *cl = (ConsoleLine *)sc->history.last;
 		int offl = 0, offc = 0;
-		int xy[2] = {CONSOLE_DRAW_MARGIN, CONSOLE_DRAW_MARGIN};
-		int pen[2];
+
+		xy[0] = xy[1] = CONSOLE_DRAW_MARGIN;
 		xy[1] += tvc->lheight / 6;
 
 		console_cursor_wrap_offset(sc->prompt, tvc->console_width, &offl, &offc, NULL);
 		console_cursor_wrap_offset(cl->line, tvc->console_width, &offl, &offc, cl->line + cl->cursor);
-		pen[0] = tvc->cwidth * offc;
-		pen[1] = -2 - tvc->lheight * offl;
+		xy[0] += tvc->cwidth * offc;
+		xy[1] += -2 - tvc->lheight * offl;
 
 		console_cursor_wrap_offset(cl->line + cl->cursor, tvc->console_width, &offl, &offc, NULL);
-		pen[1] += tvc->lheight * offl;
+		xy[1] += tvc->lheight * offl;
 
-		/* cursor */
-		UI_GetThemeColor3ubv(TH_CONSOLE_CURSOR, fg);
-		glColor3ubv(fg);
-
-		glRecti((xy[0] + pen[0]) - 1,
-		        (xy[1] + pen[1]),
-		        (xy[0] + pen[0]) + 1,
-		        (xy[1] + pen[1] + tvc->lheight)
-		        );
+		if (tvc->arg2) {
+			((int *)tvc->arg2)[0] = xy[0];
+			((int *)tvc->arg2)[1] = xy[1];
+		}
 	}
+	else
+		xy[0] = xy[1] = -1; /* no cursor on this line */
+}
 
+static int console_textview_line_color(struct TextViewContext *tvc, unsigned char fg[3], unsigned char UNUSED(bg[3]))
+{
+	ConsoleLine *cl_iter = (ConsoleLine *)tvc->iter;
 	console_line_color(fg, cl_iter->type);
-
 	return TVC_LINE_FG;
 }
 
-static void console_textview_const_colors(TextViewContext *UNUSED(tvc), unsigned char bg_sel[4])
+static void console_textview_const_colors(TextViewContext *UNUSED(tvc), unsigned char bg_sel[4], unsigned char cursor[3])
 {
 	UI_GetThemeColor4ubv(TH_CONSOLE_SELECT, bg_sel);
+	UI_GetThemeColor3ubv(TH_CONSOLE_CURSOR, cursor);
 }
 
 static int console_textview_main__internal(struct SpaceConsole *sc, ARegion *ar, int draw,
-                                           int mval[2], void **mouse_pick, int *pos_pick)
+                                           int mval[2], void **mouse_pick, int *pos_pick, int cursor_xy[2])
 {
 	ConsoleLine cl_dummy = {NULL};
 	int ret = 0;
@@ -205,9 +203,10 @@ static int console_textview_main__internal(struct SpaceConsole *sc, ARegion *ar,
 	tvc.line_get = console_textview_line_get;
 	tvc.line_color = console_textview_line_color;
 	tvc.const_colors = console_textview_const_colors;
+	tvc.cursor_coords = console_textview_cursor_coords;
 
 	tvc.arg1 = sc;
-	tvc.arg2 = NULL;
+	tvc.arg2 = cursor_xy;
 
 	/* view */
 	tvc.sel_start = sc->sel_start;
@@ -225,16 +224,16 @@ static int console_textview_main__internal(struct SpaceConsole *sc, ARegion *ar,
 }
 
 
-void console_textview_main(struct SpaceConsole *sc, ARegion *ar)
+void console_textview_main(struct SpaceConsole *sc, ARegion *ar, int cursor_xy[2])
 {
 	int mval[2] = {INT_MAX, INT_MAX};
-	console_textview_main__internal(sc, ar, 1,  mval, NULL, NULL);
+	console_textview_main__internal(sc, ar, 1,  mval, NULL, NULL, cursor_xy);
 }
 
 int console_textview_height(struct SpaceConsole *sc, ARegion *ar)
 {
 	int mval[2] = {INT_MAX, INT_MAX};
-	return console_textview_main__internal(sc, ar, 0,  mval, NULL, NULL);
+	return console_textview_main__internal(sc, ar, 0,  mval, NULL, NULL, NULL);
 }
 
 int console_char_pick(struct SpaceConsole *sc, ARegion *ar, const int mval[2])
@@ -246,6 +245,6 @@ int console_char_pick(struct SpaceConsole *sc, ARegion *ar, const int mval[2])
 	mval_clamp[0] = CLAMPIS(mval[0], CONSOLE_DRAW_MARGIN, ar->winx - CONSOLE_DRAW_MARGIN);
 	mval_clamp[1] = CLAMPIS(mval[1], CONSOLE_DRAW_MARGIN, ar->winy - CONSOLE_DRAW_MARGIN);
 
-	console_textview_main__internal(sc, ar, 0, mval_clamp, &mouse_pick, &pos_pick);
+	console_textview_main__internal(sc, ar, 0, mval_clamp, &mouse_pick, &pos_pick, NULL);
 	return pos_pick;
 }

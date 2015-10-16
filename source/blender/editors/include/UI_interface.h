@@ -1141,4 +1141,9 @@ void UI_tooltip_free(struct bContext *C, struct bScreen *sc, struct ARegion *ar)
 
 int UI_calc_float_precision(int prec, double value);
 
+/* Input method */
+#ifdef WITH_X11_XINPUT
+void UI_xim_spot_set(struct wmWindow *win, struct ARegion *ar, int x, int y);
+#endif
+
 #endif  /* __UI_INTERFACE_H__ */

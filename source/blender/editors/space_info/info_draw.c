@@ -247,6 +247,7 @@ static int info_textview_main__internal(struct SpaceInfo *sinfo, ARegion *ar, Re
 	tvc.line_get = report_textview_line_get;
 	tvc.line_color = report_textview_line_color;
 	tvc.const_colors = NULL;
+	tvc.cursor_coords = NULL;
 
 	tvc.arg1 = sinfo;
 	tvc.arg2 = reports;

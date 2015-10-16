@@ -920,6 +920,14 @@ GHOST_TUns16 GHOST_GetDPIHint(GHOST_WindowHandle windowhandle)
 	return window->getDPIHint();
 }
 
+#ifdef WITH_X11_XINPUT
+void GHOST_SetXIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->setX11_XIMSpot(x, y);
+}
+#endif /* WITH_X11_XINPUT */
+
 #ifdef WITH_INPUT_IME
 
 void GHOST_BeginIME(GHOST_WindowHandle windowhandle,
