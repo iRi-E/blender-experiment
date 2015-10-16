@@ -1709,6 +1709,14 @@ bool WM_window_is_fullscreen(wmWindow *win)
 	return win->windowstate == GHOST_kWindowStateFullScreen;
 }
 
+#ifdef WITH_X11_XINPUT
+void wm_window_xim_spot_set(wmWindow *win, int x, int y)
+{
+	BLI_assert(win);
+
+	GHOST_SetXIMSpot(win->ghostwin, x, win->sizey - y);
+}
+#endif /* WITH_X11_XINPUT */
 
 #ifdef WITH_INPUT_IME
 /* note: keep in mind wm_window_IME_begin is also used to reposition the IME window */

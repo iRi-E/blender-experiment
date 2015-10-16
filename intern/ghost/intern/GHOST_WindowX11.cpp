@@ -338,6 +338,7 @@ GHOST_WindowX11(GHOST_SystemX11 *system,
       m_dropTarget(NULL),
 #endif
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+      m_xim_style(XIMPreeditNothing | XIMStatusNothing), /* root window style */
       m_xic(NULL),
 #endif
       m_valid_setup(false),
@@ -612,15 +613,55 @@ bool GHOST_WindowX11::createX11_XIC()
 	if (!xim)
 		return false;
 
+	XIMStyles *supported_styles;
+	XIMStyle style;
+	unsigned short i;
+	/* use over-the-spot style if available */
+	XGetIMValues(xim, XNQueryInputStyle, &supported_styles, NULL);
+	for (i = 0; i < supported_styles->count_styles; i++) {
+		style = supported_styles->supported_styles[i];
+		if ((style & XIMPreeditPosition) && (style & XIMStatusNothing)) {
+			m_xim_style = style;
+			GHOST_PRINT("XIM: over-the-spot style chosen\n");
+			break;
+		}
+	}
+	XFree(supported_styles);
+
+	XRectangle area = {0, 0, 0, 0};
+	XPoint spot = {0, 0};
+	int missing_count;
+	char **missing_list, *def_string;
+	XFontSet fs = NULL;
+	XVaNestedList attr = NULL;
 	XICCallback destroy;
+
+	if (m_xim_style & XIMPreeditPosition) {
+		fs = XCreateFontSet(m_display, "-*-*-*-*-*-*-*-*-*-*-*-*-*-*",
+				    &missing_list, &missing_count, &def_string);
+		if (missing_list)
+			XFreeStringList(missing_list);
+
+		attr = XVaCreateNestedList(0,
+					   XNArea, &area,
+					   XNSpotLocation, &spot,
+					   XNFontSet, fs,
+					   NULL);
+	}
 	destroy.callback = (XICProc)destroyICCallback;
 	destroy.client_data = (XPointer)&m_xic;
 	m_xic = XCreateIC(xim, XNClientWindow, m_window, XNFocusWindow, m_window,
-	                  XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+	                  XNInputStyle, m_xim_style,
 	                  XNResourceName, GHOST_X11_RES_NAME,
 	                  XNResourceClass, GHOST_X11_RES_CLASS,
+	                  XNPreeditAttributes, attr,
 	                  XNDestroyCallback, &destroy,
 	                  NULL);
+	if (attr)
+		XFree(attr);
+	if (fs)
+		XFreeFontSet(m_display, fs);
+
 	if (!m_xic)
 		return false;
 
@@ -634,6 +675,17 @@ bool GHOST_WindowX11::createX11_XIC()
 	             PointerMotionMask | FocusChangeMask |
 	             PropertyChangeMask | KeymapStateMask | fevent);
 	return true;
+}
+
+void GHOST_WindowX11::setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y)
+{
+	if (!m_xic || (m_xim_style & XIMPreeditNothing))
+		return;
+
+	XPoint spot = {(short)x, (short)y};
+	XVaNestedList attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	XSetICValues(m_xic, XNPreeditAttributes, attr, NULL);
+	XFree(attr);
 }
 #endif
 

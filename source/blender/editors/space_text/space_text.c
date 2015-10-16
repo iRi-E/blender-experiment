@@ -437,6 +437,7 @@ static void text_main_region_draw(const bContext *C, ARegion *ar)
 	/* draw entirely, view changes should be handled here */
 	SpaceText *st = CTX_wm_space_text(C);
 	//View2D *v2d = &ar->v2d;
+	int cursor_xy[2];
 	
 	/* clear and setup matrix */
 	UI_ThemeClearColor(TH_BACK);
@@ -445,12 +446,17 @@ static void text_main_region_draw(const bContext *C, ARegion *ar)
 	// UI_view2d_view_ortho(v2d);
 		
 	/* data... */
-	draw_text_main(st, ar);
+	draw_text_main(st, ar, cursor_xy);
 	
 	/* reset view matrix */
 	// UI_view2d_view_restore(C);
 	
 	/* scrollers? */
+
+#ifdef WITH_X11_XINPUT
+	if (CTX_wm_region(C) == ar && cursor_xy[0] >= 0)
+		UI_xim_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1]);
+#endif
 }
 
 static void text_cursor(wmWindow *win, ScrArea *sa, ARegion *ar)

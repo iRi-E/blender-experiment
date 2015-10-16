@@ -210,6 +210,7 @@ public:
 	}
 
 	bool createX11_XIC();
+	void setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y);
 #endif
 
 #ifdef WITH_X11_XINPUT
@@ -354,6 +355,7 @@ private:
 #endif
 
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+	XIMStyle m_xim_style;
 	XIC m_xic;
 #endif
 

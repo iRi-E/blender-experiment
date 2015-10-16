@@ -88,6 +88,9 @@
 #include "WM_api.h"
 #include "WM_types.h"
 
+#ifdef WITH_X11_XINPUT
+#  include "wm_window.h"
+#endif
 #ifdef WITH_INPUT_IME
 #  include "wm_window.h"
 #  include "BLT_lang.h"
@@ -2993,6 +2996,21 @@ static bool ui_textedit_copypaste(uiBut *but, uiHandleButtonData *data, const in
 
 	return changed;
 }
+
+#ifdef WITH_X11_XINPUT
+void UI_xim_spot_set(wmWindow *win, ARegion *ar, int x, int y)
+{
+	ui_region_to_window(ar, &x, &y);
+	wm_window_xim_spot_set(win, x, y);
+}
+
+void ui_but_xim_spot_set(uiBut *but, int x, int y)
+{
+	BLI_assert(but->active);
+
+	UI_xim_spot_set(but->active->window, but->active->region, x, y);
+}
+#endif
 
 #ifdef WITH_INPUT_IME
 /* enable ime, and set up uibut ime data */

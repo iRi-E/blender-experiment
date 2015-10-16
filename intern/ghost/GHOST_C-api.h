@@ -908,6 +908,15 @@ extern int GHOST_UseNativePixels(void);
 extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
 
 /**
+ * Set location of the preedit sub-window of X input method (XIM).
+ * This takes effect when the XIM server supports over-the-spot style.
+ * \param windowhandle Window handle of the caller
+ * \param x Requested x-coordinate that the preedit window will be placed
+ * \param y Requested y-coordinate that the preedit window will be placed
+ */
+extern void GHOST_SetXIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y);
+
+/**
  * Enable IME attached to the given window, i.e. allows user-input
  * events to be dispatched to the IME.
  * \param windowhandle Window handle of the caller

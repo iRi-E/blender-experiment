@@ -1397,6 +1397,10 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 
 			/* draw cursor */
 			glRecti(rect->xmin + t, ty, tx, rect->ymax - 2);
+
+#ifdef WITH_X11_XINPUT
+			ui_but_xim_spot_set(but, tx, ty);
+#endif
 		}
 
 #ifdef WITH_INPUT_IME

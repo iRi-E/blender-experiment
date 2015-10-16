@@ -295,6 +295,10 @@ public:
 		return 1.0f;
 	}
 
+#ifdef WITH_X11_XINPUT
+	virtual void setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y) = 0;
+#endif /* WITH_X11_XINPUT */
+
 #ifdef WITH_INPUT_IME
 	virtual void beginIME(GHOST_TInt32 x,
 	                      GHOST_TInt32 y,

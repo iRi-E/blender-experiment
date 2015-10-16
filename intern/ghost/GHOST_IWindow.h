@@ -332,6 +332,16 @@ public:
 
 	virtual float getNativePixelSize(void) = 0;
 
+#ifdef WITH_X11_XINPUT
+	/**
+         * Set location of the preedit sub-window of X input method (XIM).
+         * This takes effect when the XIM server supports over-the-spot style.
+         * \param x Requested x-coordinate that the preedit window will be placed
+         * \param y Requested y-coordinate that the preedit window will be placed
+         */
+	virtual void setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y) = 0;
+#endif /* WITH_X11_XINPUT */
+
 #ifdef WITH_INPUT_IME
 	/**
 	 * Enable IME attached to the given window, i.e. allows user-input
