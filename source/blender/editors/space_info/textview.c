@@ -60,7 +60,7 @@ typedef struct ConsoleDrawContext {
 	int winx;
 	int ymin, ymax;
 	int *xy; // [2]
-	int *cxy; // [2]
+	int *cursor_xy; // [2]
 	int *sel; // [2]
 	int *pos_pick; // bottom of view == 0, top of file == combine chars, end of line is lower then start. 
 	const int *mval; // [2]
@@ -119,9 +119,10 @@ static int console_wrap_offsets(const char *str, int len, int width, int *lines,
 /* return 0 if the last line is off the screen
  * should be able to use this for any string type */
 
-static int console_draw_string(ConsoleDrawContext *cdc, const char *str, int str_len,
-			       const unsigned char fg[3], const unsigned char bg[3],
-			       const unsigned char cursor[3], const unsigned char bg_sel[4])
+static int console_draw_string(
+        ConsoleDrawContext *cdc, const char *str, int str_len,
+        const unsigned char fg[3], const unsigned char bg[3],
+        const unsigned char cursor[3], const unsigned char bg_sel[4])
 {
 	int tot_lines;            /* total number of lines for wrapping */
 	int *offsets;             /* offsets of line beginnings for wrapping */
@@ -190,7 +191,10 @@ static int console_draw_string(ConsoleDrawContext *cdc, const char *str, int str
 
 		if (cursor) {
 			glColor3ubv(cursor);
-			glRecti(cdc->cxy[0] - 1, cdc->cxy[1], cdc->cxy[0] + 1, cdc->cxy[1] + cdc->lheight);
+			glRecti(cdc->cursor_xy[0] - 1,
+			        cdc->cursor_xy[1],
+			        cdc->cursor_xy[0] + 1,
+			        cdc->cursor_xy[1] + cdc->lheight);
 		}
 
 		glColor3ubv(fg);
@@ -243,7 +247,10 @@ static int console_draw_string(ConsoleDrawContext *cdc, const char *str, int str
 
 		if (cursor) {
 			glColor3ubv(cursor);
-			glRecti(cdc->cxy[0] - 1, cdc->cxy[1], cdc->cxy[0] + 1, cdc->cxy[1] + cdc->lheight);
+			glRecti(cdc->cursor_xy[0] - 1,
+			        cdc->cursor_xy[1],
+			        cdc->cursor_xy[0] + 1,
+			        cdc->cursor_xy[1] + cdc->lheight);
 		}
 
 		glColor3ubv(fg);
@@ -312,7 +319,7 @@ int textview_draw(TextViewContext *tvc, const int draw, int mval[2], void **mous
 	cdc.ymin = tvc->ymin;
 	cdc.ymax = tvc->ymax;
 	cdc.xy = xy;
-	cdc.cxy = cursor_xy;
+	cdc.cursor_xy = cursor_xy;
 	cdc.sel = sel;
 	cdc.pos_pick = pos_pick;
 	cdc.mval = mval;
