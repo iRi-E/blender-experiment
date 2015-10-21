@@ -3001,7 +3001,7 @@ static bool ui_textedit_copypaste(uiBut *but, uiHandleButtonData *data, const in
 void UI_xim_spot_set(wmWindow *win, ARegion *ar, int x, int y)
 {
 	ui_region_to_window(ar, &x, &y);
-	wm_window_xim_spot_set(win, x, y);
+	wm_window_XIM_spot_set(win, x, y);
 }
 
 void ui_but_xim_spot_set(uiBut *but, int x, int y)

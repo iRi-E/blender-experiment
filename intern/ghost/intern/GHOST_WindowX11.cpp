@@ -642,11 +642,12 @@ bool GHOST_WindowX11::createX11_XIC()
 		if (missing_list)
 			XFreeStringList(missing_list);
 
-		attr = XVaCreateNestedList(0,
-					   XNArea, &area,
-					   XNSpotLocation, &spot,
-					   XNFontSet, fs,
-					   NULL);
+		attr = XVaCreateNestedList(
+		        0,
+		        XNArea, &area,
+		        XNSpotLocation, &spot,
+		        XNFontSet, fs,
+		        NULL);
 	}
 	destroy.callback = (XICProc)destroyICCallback;
 	destroy.client_data = (XPointer)&m_xic;

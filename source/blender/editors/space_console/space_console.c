@@ -248,8 +248,9 @@ static void console_main_region_draw(const bContext *C, ARegion *ar)
 	UI_view2d_scrollers_free(scrollers);
 
 #ifdef WITH_X11_XINPUT
-	if (CTX_wm_region(C) == ar && cursor_xy[0] >= 0)
+	if ((cursor_xy[0] != -1) && (CTX_wm_region(C) == ar)) {
 		UI_xim_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1]);
+	}
 #endif
 }
 

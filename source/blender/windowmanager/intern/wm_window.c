@@ -1710,7 +1710,7 @@ bool WM_window_is_fullscreen(wmWindow *win)
 }
 
 #ifdef WITH_X11_XINPUT
-void wm_window_xim_spot_set(wmWindow *win, int x, int y)
+void wm_window_XIM_spot_set(wmWindow *win, int x, int y)
 {
 	BLI_assert(win);
 
