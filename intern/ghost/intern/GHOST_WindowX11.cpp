@@ -655,8 +655,9 @@ bool GHOST_WindowX11::createX11_XIC()
 	                  XNInputStyle, m_xim_style,
 	                  XNResourceName, GHOST_X11_RES_NAME,
 	                  XNResourceClass, GHOST_X11_RES_CLASS,
-	                  XNPreeditAttributes, attr,
 	                  XNDestroyCallback, &destroy,
+	                  /* keep last */
+	                  attr ? XNPreeditAttributes : NULL, attr,
 	                  NULL);
 	if (attr)
 		XFree(attr);
