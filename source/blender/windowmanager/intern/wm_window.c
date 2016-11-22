@@ -1709,14 +1709,28 @@ bool WM_window_is_fullscreen(wmWindow *win)
 	return win->windowstate == GHOST_kWindowStateFullScreen;
 }
 
-#ifdef WITH_X11_XINPUT
-void wm_window_XIM_spot_set(wmWindow *win, int x, int y)
+#ifdef WITH_INPUT_METHOD
+void WM_window_IM_spot_set(wmWindow *win, int x, int y, bool force)
 {
 	BLI_assert(win);
 
-	GHOST_SetXIMSpot(win->ghostwin, x, win->sizey - y);
+	GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, force);
 }
-#endif /* WITH_X11_XINPUT */
+
+void WM_window_IM_begin(wmWindow *win, bool modal)
+{
+	BLI_assert(win);
+
+	GHOST_BeginIM(win->ghostwin, modal);
+}
+
+void WM_window_IM_end(wmWindow *win, bool modal)
+{
+	BLI_assert(win);
+
+	GHOST_EndIM(win->ghostwin, modal);
+}
+#endif /* WITH_INPUT_METHOD */
 
 #ifdef WITH_INPUT_IME
 /* note: keep in mind wm_window_IME_begin is also used to reposition the IME window */

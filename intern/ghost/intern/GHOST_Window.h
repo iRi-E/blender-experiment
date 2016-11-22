@@ -295,9 +295,11 @@ public:
 		return 1.0f;
 	}
 
-#ifdef WITH_X11_XINPUT
-	virtual void setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y) = 0;
-#endif /* WITH_X11_XINPUT */
+#ifdef WITH_INPUT_METHOD
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
+	virtual void beginIM(int modal) = 0;
+	virtual void endIM(int modal) = 0;
+#endif /* WITH_INPUT_METHOD */
 
 #ifdef WITH_INPUT_IME
 	virtual void beginIME(GHOST_TInt32 x,

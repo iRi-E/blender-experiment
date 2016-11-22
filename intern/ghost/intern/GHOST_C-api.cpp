@@ -914,13 +914,25 @@ float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle)
 	return 1.0f;
 }
 
-#ifdef WITH_X11_XINPUT
-void GHOST_SetXIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y)
+#ifdef WITH_INPUT_METHOD
+void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->setX11_XIMSpot(x, y);
+	window->setIMSpot(x, y, force);
 }
-#endif /* WITH_X11_XINPUT */
+
+void GHOST_BeginIM(GHOST_WindowHandle windowhandle, int modal)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->beginIM(modal);
+}
+
+void GHOST_EndIM(GHOST_WindowHandle windowhandle, int modal)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->endIM(modal);
+}
+#endif /* WITH_INPUT_METHOD */
 
 #ifdef WITH_INPUT_IME
 

@@ -241,6 +241,7 @@ elseif(WITH_X11)
 
 	if(WITH_X11_XINPUT)
 		add_definitions(-DWITH_X11_XINPUT)
+		add_definitions(-DWITH_INPUT_METHOD)
 		list(APPEND INC_SYS
 			${X11_Xinput_INCLUDE_PATH}
 		)

@@ -332,15 +332,38 @@ public:
 
 	virtual float getNativePixelSize(void) = 0;
 
-#ifdef WITH_X11_XINPUT
+#ifdef WITH_INPUT_METHOD
 	/**
-         * Set location of the preedit sub-window of X input method (XIM).
-         * This takes effect when the XIM server supports over-the-spot style.
+         * Set location of the preedit sub-window of input method (e.g. XIM).
+         * This takes effect when the input method server supports over-the-spot or
+         * on-the-spot input style.
          * \param x Requested x-coordinate that the preedit window will be placed
          * \param y Requested y-coordinate that the preedit window will be placed
+         * \param force Whether or not to set location when doing modal input
+         * true:  Set location unconditionally
+         * false: Do nothing when doing modal input
          */
-	virtual void setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y) = 0;
-#endif /* WITH_X11_XINPUT */
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
+
+	/**
+         * Enable input method attached to the given window, i.e. allows user-input
+         * events to be dispatched to the input method server.
+         * \param modal Whether or not to start modal input
+         * true:  Start modal input via input method
+         * false: Activate input method
+         */
+	virtual void beginIM(int modal) = 0;
+
+	/**
+         * Disable the input method attached to the given window, i.e. prohibits any
+         * user-input events from being dispatched to the input method server.
+         * Do nothing if modal is false and already modal.
+         * \param modal Whether or not to stop modal input
+         * true:  Stop modal input
+         * false: Deactivate input method but do nothing if already in modal input
+         */
+	virtual void endIM(int modal) = 0;
+#endif /* WITH_INPUT_METHOD */
 
 #ifdef WITH_INPUT_IME
 	/**

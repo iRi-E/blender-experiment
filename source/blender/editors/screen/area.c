@@ -505,6 +505,16 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 	wmOrtho2_region_pixelspace(ar);
 	
 	UI_SetTheme(sa ? sa->spacetype : 0, at->regionid);
+
+#ifdef WITH_INPUT_METHOD
+	if (CTX_wm_screen(C)->subwinactive == ar->swinid) {
+		if (at->im_begin) {
+			at->im_begin(C, ar);
+		} else {
+			UI_textedit_im_end(win, false);
+		}
+	}
+#endif
 	
 	/* optional header info instead? */
 	if (ar->headerstr) {

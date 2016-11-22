@@ -69,6 +69,9 @@
 #include "RNA_access.h"
 
 #include "UI_resources.h"
+#ifdef WITH_INPUT_METHOD
+#  include "UI_interface.h"
+#endif
 
 #ifdef WITH_PYTHON
 #  include "BPY_extern.h"
@@ -1463,6 +1466,20 @@ static void view3d_id_remap(ScrArea *sa, SpaceLink *slink, ID *old_id, ID *new_i
 	}
 }
 
+#ifdef WITH_INPUT_METHOD
+static void view3d_im_begin(const bContext *C, ARegion *ar)
+{
+	wmWindow *win = CTX_wm_window(C);
+	Object *obedit = CTX_data_edit_object(C);
+	if (obedit && obedit->type == OB_FONT) {
+		UI_textedit_im_begin(win, false);
+		UI_im_spot_set(win, ar, 0, 0);
+	} else {
+		UI_textedit_im_end(win, false);
+	}
+}
+#endif
+
 /* only called once, from space/spacetypes.c */
 void ED_spacetype_view3d(void)
 {
@@ -1495,6 +1512,9 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_main_region_listener;
 	art->cursor = view3d_main_region_cursor;
 	art->lock = 1;   /* can become flag, see BKE_spacedata_draw_locks */
+#ifdef WITH_INPUT_METHOD
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 	
 	/* regions: listview/buttons */
@@ -1505,6 +1525,9 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_buttons_region_init;
 	art->draw = view3d_buttons_region_draw;
+#ifdef WITH_INPUT_METHOD
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 
 	view3d_buttons_register(art);
@@ -1518,6 +1541,9 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;
+#ifdef WITH_INPUT_METHOD
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 	
 #if 0
@@ -1534,6 +1560,9 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_props_region_listener;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;
+#ifdef WITH_INPUT_METHOD
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 	
 	view3d_tool_props_register(art);

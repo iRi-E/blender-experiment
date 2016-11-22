@@ -1398,8 +1398,11 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 			/* draw cursor */
 			glRecti(rect->xmin + t, ty, tx, rect->ymax - 2);
 
-#ifdef WITH_X11_XINPUT
-			ui_but_xim_spot_set(but, tx, ty);
+#ifdef WITH_INPUT_METHOD
+			/* over-the-spot style input needs coordinates every time the cursor is drawn,
+			 * because there is no way to know if the preedit is empty or not.
+			 */
+			ui_but_im_spot_set(but, tx, ty);
 #endif
 		}
 

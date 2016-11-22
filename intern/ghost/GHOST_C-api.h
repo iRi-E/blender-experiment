@@ -908,13 +908,38 @@ extern int GHOST_UseNativePixels(void);
 extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
 
 /**
- * Set location of the preedit sub-window of X input method (XIM).
- * This takes effect when the XIM server supports over-the-spot style.
+ * Set location of the preedit sub-window of input method (e.g. XIM).
+ * This takes effect when the input method server supports over-the-spot or
+ * on-the-spot input style.
  * \param windowhandle Window handle of the caller
  * \param x Requested x-coordinate that the preedit window will be placed
  * \param y Requested y-coordinate that the preedit window will be placed
+ * \param force Whether or not to set location when doing modal input
+ * true:  Set location unconditionally
+ * false: Do nothing when doing modal input
  */
-extern void GHOST_SetXIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y);
+extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force);
+
+/**
+ * Enable input method attached to the given window, i.e. allows user-input
+ * events to be dispatched to the input method server.
+ * \param windowhandle Window handle of the caller
+ * \param modal Whether or not to start modal input
+ * true:  Start modal input via input method
+ * false: Activate input method
+ */
+extern void GHOST_BeginIM(GHOST_WindowHandle windowhandle, int modal);
+
+/**
+ * Disable the input method attached to the given window, i.e. prohibits any
+ * user-input events from being dispatched to the input method server.
+ * Do nothing if modal is false and already modal.
+ * \param windowhandle The window handle of the caller
+ * \param modal Whether or not to stop modal input
+ * true:  Stop modal input
+ * false: Deactivate input method but do nothing if already in modal input
+ */
+extern void GHOST_EndIM(GHOST_WindowHandle windowhandle, int modal);
 
 /**
  * Enable IME attached to the given window, i.e. allows user-input

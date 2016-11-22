@@ -340,6 +340,9 @@ GHOST_WindowX11(GHOST_SystemX11 *system,
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
       m_xim_style(XIMPreeditNothing | XIMStatusNothing), /* root window style */
       m_xic(NULL),
+      m_focused(false),
+      m_xim_needed(false),
+      m_xim_modal(false),
 #endif
       m_valid_setup(false),
       m_is_debug_context(is_debug)
@@ -679,17 +682,74 @@ bool GHOST_WindowX11::createX11_XIC()
 	return true;
 }
 
-void GHOST_WindowX11::setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y)
+static void unsetICFocus(XIC xic)
 {
+	if (!xic)
+		return;
+
+	/* Input context must be reset when input focus is unset, otherwise
+	 * the language bar doesn't disappear when input focus is unset.
+	 */
+	char *str = XmbResetIC(xic);
+	if (str)
+		XFree(str);
+
+	XUnsetICFocus(xic);
+}
+
+void GHOST_WindowX11::setX11_ICFocus(bool focused)
+{
+	if (m_xic) {
+		if (focused && m_xim_needed) {
+			XSetICFocus(m_xic);
+		} else {
+			unsetICFocus(m_xic);
+		}
+	}
+	m_focused = focused;
+}
+
+void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
+{
+	if (!force && m_xim_modal)
+		return;
+
 	if (!m_xic || (m_xim_style & XIMPreeditNothing))
 		return;
 
+	/* Note: This code takes effect only for over-the-spot style.
+	 * If using on-the-spot style, XIM server will ignore the request.
+	 */
 	XPoint spot = {(short)x, (short)y};
 	XVaNestedList attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
 	XSetICValues(m_xic, XNPreeditAttributes, attr, NULL);
 	XFree(attr);
 }
-#endif
+
+void GHOST_WindowX11::beginIM(int modal)
+{
+	if (!modal && m_xim_modal)
+		return;
+
+	if (m_xic && m_focused && !m_xim_needed) {
+		XSetICFocus(m_xic);
+	}
+	m_xim_needed = true;
+	m_xim_modal = modal;
+}
+
+void GHOST_WindowX11::endIM(int modal)
+{
+	if (!modal && m_xim_modal)
+		return;
+
+	if (m_xic && m_focused && m_xim_needed) {
+		unsetICFocus(m_xic);
+	}
+	m_xim_needed = false;
+	m_xim_modal = false;
+}
+#endif /* defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING) */
 
 #ifdef WITH_X11_XINPUT
 void GHOST_WindowX11::refreshXInputDevices()

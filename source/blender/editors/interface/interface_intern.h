@@ -675,8 +675,8 @@ void ui_panel_menu(struct bContext *C, ARegion *ar, Panel *pa);
 uiBut *ui_but_find_old(uiBlock *block_old, const uiBut *but_new);
 uiBut *ui_but_find_new(uiBlock *block_old, const uiBut *but_new);
 
-#ifdef WITH_X11_XINPUT
-void ui_but_xim_spot_set(uiBut *but, int x, int y);
+#ifdef WITH_INPUT_METHOD
+void ui_but_im_spot_set(uiBut *but, int x, int y);
 #endif
 #ifdef WITH_INPUT_IME
 void ui_but_ime_reposition(uiBut *but, int x, int y, bool complete);

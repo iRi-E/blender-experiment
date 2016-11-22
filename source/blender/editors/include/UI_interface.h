@@ -1093,8 +1093,11 @@ void UI_butstore_unregister(uiButStore *bs_handle, uiBut **but_p);
 int UI_calc_float_precision(int prec, double value);
 
 /* Input method */
-#ifdef WITH_X11_XINPUT
-void UI_xim_spot_set(struct wmWindow *win, struct ARegion *ar, int x, int y);
+#ifdef WITH_INPUT_METHOD
+void UI_im_spot_set(struct wmWindow *win, struct ARegion *ar, int x, int y);
+void UI_textedit_im_begin(struct wmWindow *win, bool modal);
+void UI_textedit_im_end(struct wmWindow *win, bool modal);
+void UI_region_generic_im_begin(const struct bContext *C, struct ARegion *ar);
 #endif
 
 #endif  /* __UI_INTERFACE_H__ */

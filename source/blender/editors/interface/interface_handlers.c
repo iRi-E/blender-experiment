@@ -88,9 +88,6 @@
 #include "WM_api.h"
 #include "WM_types.h"
 
-#ifdef WITH_X11_XINPUT
-#  include "wm_window.h"
-#endif
 #ifdef WITH_INPUT_IME
 #  include "wm_window.h"
 #  include "BLT_lang.h"
@@ -2997,18 +2994,34 @@ static bool ui_textedit_copypaste(uiBut *but, uiHandleButtonData *data, const in
 	return changed;
 }
 
-#ifdef WITH_X11_XINPUT
-void UI_xim_spot_set(wmWindow *win, ARegion *ar, int x, int y)
-{
-	ui_region_to_window(ar, &x, &y);
-	wm_window_XIM_spot_set(win, x, y);
-}
-
-void ui_but_xim_spot_set(uiBut *but, int x, int y)
+#ifdef WITH_INPUT_METHOD
+void ui_but_im_spot_set(uiBut *but, int x, int y)
 {
 	BLI_assert(but->active);
 
-	UI_xim_spot_set(but->active->window, but->active->region, x, y);
+	ui_region_to_window(but->active->region, &x, &y);
+	WM_window_IM_spot_set(but->active->window, x, y, true);
+}
+
+void UI_im_spot_set(wmWindow *win, ARegion *ar, int x, int y)
+{
+	ui_region_to_window(ar, &x, &y);
+	WM_window_IM_spot_set(win, x, y, false);
+}
+
+void UI_textedit_im_begin(wmWindow *win, bool modal)
+{
+	WM_window_IM_begin(win, modal);
+}
+
+void UI_textedit_im_end(wmWindow *win, bool modal)
+{
+	WM_window_IM_end(win, modal);
+}
+
+void UI_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
+{
+	UI_textedit_im_begin(CTX_wm_window(C), false);
 }
 #endif
 
@@ -3133,6 +3146,11 @@ static void ui_textedit_begin(bContext *C, uiBut *but, uiHandleButtonData *data)
 
 	WM_cursor_modal_set(win, BC_TEXTEDITCURSOR);
 
+#ifdef WITH_INPUT_METHOD
+	if (is_num_but == false) {
+		UI_textedit_im_begin(win, true);
+	}
+#endif
 #ifdef WITH_INPUT_IME
 	if (is_num_but == false && BLT_lang_is_ime_supported()) {
 		ui_textedit_ime_begin(win, but);
@@ -3176,6 +3194,9 @@ static void ui_textedit_end(bContext *C, uiBut *but, uiHandleButtonData *data)
 	
 	WM_cursor_modal_restore(win);
 
+#ifdef WITH_INPUT_METHOD
+	UI_textedit_im_end(win, true);
+#endif
 #ifdef WITH_INPUT_IME
 	if (win->ime_data) {
 		ui_textedit_ime_end(win, but);

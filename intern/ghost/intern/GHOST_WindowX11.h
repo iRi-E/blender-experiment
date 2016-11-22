@@ -205,12 +205,18 @@ public:
 #endif // WITH_X11_XINPUT
 
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+	/* used only in GHOST */
 	XIC getX11_XIC() {
 		return m_xic;
 	}
 
 	bool createX11_XIC();
-	void setX11_XIMSpot(GHOST_TInt32 x, GHOST_TInt32 y);
+	void setX11_ICFocus(bool focused);
+
+	/* public API */
+	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force);
+	void beginIM(int modal);
+	void endIM(int modal);
 #endif
 
 #ifdef WITH_X11_XINPUT
@@ -357,6 +363,9 @@ private:
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
 	XIMStyle m_xim_style;
 	XIC m_xic;
+	bool m_focused;
+	bool m_xim_needed;
+	bool m_xim_modal;
 #endif
 
 	bool m_valid_setup;

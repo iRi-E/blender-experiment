@@ -1419,21 +1419,10 @@ void ED_screen_set_subwinactive(bContext *C, wmEvent *event)
 			for (ar = sa->regionbase.first; ar; ar = ar->next) {
 				if (BLI_rcti_isect_pt_v(&ar->winrct, &event->x)) {
 					scr->subwinactive = ar->swinid;
-#ifdef WITH_X11_XINPUT
+#ifdef WITH_INPUT_METHOD
+					/* redraw region to place input method's sub-window on appropriate location */
 					if (oldswin != scr->subwinactive) {
-						/* place XIM sub-window on appropriate location */
-						switch (sa->spacetype) {
-							case SPACE_TEXT:
-							case SPACE_CONSOLE:
-								if (ar->regiontype == RGN_TYPE_WINDOW) {
-									ED_region_tag_redraw(ar);
-									break;
-								}
-								/* fall-through */
-							default:
-								UI_xim_spot_set(win, ar, 0, 0);
-								break;
-						}
+						ED_region_tag_redraw(ar);
 					}
 #endif
 					break;
