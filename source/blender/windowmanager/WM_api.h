@@ -105,6 +105,13 @@ struct wmWindow	*WM_window_open(struct bContext *C, const struct rcti *rect);
 struct wmWindow *WM_window_open_temp(struct bContext *C, int x, int y, int sizex, int sizey, int type);
 void             WM_window_set_dpi(wmWindow *win);
 			
+			/* input method */
+#ifdef WITH_INPUT_METHOD
+void		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
+void		WM_window_IM_begin	(wmWindow *win, bool modal);
+void		WM_window_IM_end	(wmWindow *win, bool modal);
+#endif
+
 			/* returns true if draw method is triple buffer */
 bool		WM_is_draw_triple(struct wmWindow *win);
 
