@@ -1420,9 +1420,14 @@ void ED_screen_set_subwinactive(bContext *C, wmEvent *event)
 				if (BLI_rcti_isect_pt_v(&ar->winrct, &event->x)) {
 					scr->subwinactive = ar->swinid;
 #ifdef WITH_IM_OVERTHESPOT
-					/* redraw region to place input method's sub-window on appropriate location */
 					if (oldswin != scr->subwinactive) {
-						ED_region_tag_redraw(ar);
+						if (ar->type && ar->type->im_begin) {
+							if (ar->type->im_begin(C, ar))
+								/* redraw region to calculate IM spot location */
+								ED_region_tag_redraw(ar);
+						} else {
+							WM_window_IM_end(win, false);
+						}
 					}
 #endif
 					break;

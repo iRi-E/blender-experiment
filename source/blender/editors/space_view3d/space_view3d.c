@@ -1467,16 +1467,19 @@ static void view3d_id_remap(ScrArea *sa, SpaceLink *slink, ID *old_id, ID *new_i
 }
 
 #ifdef WITH_IM_OVERTHESPOT
-static void view3d_im_begin(const bContext *C, ARegion *ar)
+static bool view3d_im_begin(const bContext *C, ARegion *ar)
 {
 	wmWindow *win = CTX_wm_window(C);
 	Object *obedit = CTX_data_edit_object(C);
+
 	if (obedit && obedit->type == OB_FONT) {
 		WM_window_IM_begin(win, false);
 		UI_region_im_spot_set(win, ar, 0, 0, false);
 	} else {
 		WM_window_IM_end(win, false);
 	}
+
+	return false;
 }
 #endif
 
