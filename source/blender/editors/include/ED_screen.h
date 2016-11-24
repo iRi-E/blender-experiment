@@ -74,6 +74,9 @@ void    ED_region_image_metadata_draw(int x, int y, struct ImBuf *ibuf, const rc
 void    ED_region_grid_draw(struct ARegion *ar, float zoomx, float zoomy);
 float	ED_region_blend_factor(struct ARegion *ar);
 void	ED_region_visible_rect(struct ARegion *ar, struct rcti *rect);
+#ifdef WITH_IM_OVERTHESPOT
+void    ED_region_generic_im_begin(const struct bContext *C, struct ARegion *ar);
+#endif
 
 
 /* spaces */

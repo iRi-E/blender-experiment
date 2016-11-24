@@ -1059,15 +1059,26 @@ GHOST_TSuccess GHOST_WindowWin32::endProgressBar()
 }
 
 
-#ifdef WITH_INPUT_IME
-void GHOST_WindowWin32::beginIME(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 w, GHOST_TInt32 h, int completed)
+#ifdef WITH_IM_ONTHESPOT
+/* Currently, Win32 uses modal input only */
+void GHOST_WindowWin32::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
 {
-	m_imeImput.BeginIME(m_hWnd, GHOST_Rect(x, y - h, x, y), (bool)completed);
+	if (force) {
+		x += 5;
+		y -= 1;
+		m_imeImput.BeginIME(m_hWnd, GHOST_Rect(x, y, x, y), false);
+	}
 }
 
-
-void GHOST_WindowWin32::endIME()
+void GHOST_WindowWin32::beginIM(int modal)
 {
-	m_imeImput.EndIME(m_hWnd);
+	if (modal)
+		m_imeImput.BeginIME(m_hWnd, GHOST_Rect(-1, -1, 0, 0), true);
 }
-#endif /* WITH_INPUT_IME */
+
+void GHOST_WindowWin32::endIM(int modal)
+{
+	if (modal)
+		m_imeImput.EndIME(m_hWnd);
+}
+#endif /* WITH_IM_ONTHESPOT */

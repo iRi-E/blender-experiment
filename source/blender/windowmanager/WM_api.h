@@ -105,7 +105,7 @@ struct wmWindow	*WM_window_open(struct bContext *C, const struct rcti *rect);
 struct wmWindow *WM_window_open_temp(struct bContext *C, const struct rcti *rect_init, int type);
 
 			/* input method */
-#ifdef WITH_INPUT_METHOD
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 void		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
 void		WM_window_IM_begin	(wmWindow *win, bool modal);
 void		WM_window_IM_end	(wmWindow *win, bool modal);
@@ -520,8 +520,8 @@ void        WM_event_ndof_to_quat(const struct wmNDOFMotionData *ndof, float q[4
 float       WM_event_tablet_data(const struct wmEvent *event, int *pen_flip, float tilt[2]);
 bool        WM_event_is_tablet(const struct wmEvent *event);
 
-#ifdef WITH_INPUT_IME
-bool        WM_event_is_ime_switch(const struct wmEvent *event);
+#ifdef WITH_IM_ONTHESPOT
+bool        WM_event_is_im_switch(const struct wmEvent *event);
 #endif
 
 #ifdef __cplusplus

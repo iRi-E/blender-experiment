@@ -241,7 +241,7 @@ elseif(WITH_X11)
 
 	if(WITH_X11_XINPUT)
 		add_definitions(-DWITH_X11_XINPUT)
-		add_definitions(-DWITH_INPUT_METHOD)
+		add_definitions(-DWITH_IM_OVERTHESPOT)
 		list(APPEND INC_SYS
 			${X11_Xinput_INCLUDE_PATH}
 		)
@@ -281,7 +281,7 @@ elseif(WIN32)
 	endif()
 
 	if(WITH_INPUT_IME)
-		add_definitions(-DWITH_INPUT_IME)
+		add_definitions(-DWITH_IM_ONTHESPOT)
 
 		list(APPEND SRC
 			intern/GHOST_ImeWin32.cpp

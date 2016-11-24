@@ -797,8 +797,8 @@ GHOST_Event *GHOST_SystemWin32::processWindowEvent(GHOST_TEventType type, GHOST_
 	return new GHOST_Event(system->getMilliSeconds(), type, window);
 }
 
-#ifdef WITH_INPUT_IME
-GHOST_Event *GHOST_SystemWin32::processImeEvent(GHOST_TEventType type, GHOST_WindowWin32 *window, GHOST_TEventImeData *data)
+#ifdef WITH_IM_ONTHESPOT
+GHOST_Event *GHOST_SystemWin32::processImeEvent(GHOST_TEventType type, GHOST_WindowWin32 *window, GHOST_TEventIMData *data)
 {
 	GHOST_SystemWin32 *system = (GHOST_SystemWin32 *)getSystem();
 	return new GHOST_EventIME(system->getMilliSeconds(), type, window, data);
@@ -929,7 +929,7 @@ LRESULT WINAPI GHOST_SystemWin32::s_wndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 				case WM_INPUTLANGCHANGE:
 				{
 					system->handleKeyboardChange();
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 					window->getImeInput()->SetInputLanguage();
 #endif
 					break;
@@ -969,7 +969,7 @@ LRESULT WINAPI GHOST_SystemWin32::s_wndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 					}
 					break;
 				}
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 				////////////////////////////////////////////////////////////////////////
 				// IME events, processed, read more in GHOST_IME.h
 				////////////////////////////////////////////////////////////////////////
@@ -991,7 +991,7 @@ LRESULT WINAPI GHOST_SystemWin32::s_wndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 					ime->CreateImeWindow(hwnd);
 					ime->ResetComposition(hwnd);
 					event = processImeEvent(
-					        GHOST_kEventImeCompositionStart,
+					        GHOST_kEventIMCompositionStart,
 					        window,
 					        &ime->eventImeData);
 					break;
@@ -1004,10 +1004,10 @@ LRESULT WINAPI GHOST_SystemWin32::s_wndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 					ime->UpdateInfo(hwnd);
 					if (ime->eventImeData.result_len) {
 						/* remove redundant IME event */
-						eventManager->removeTypeEvents(GHOST_kEventImeComposition, window);
+						eventManager->removeTypeEvents(GHOST_kEventIMComposition, window);
 					}
 					event = processImeEvent(
-					        GHOST_kEventImeComposition,
+					        GHOST_kEventIMComposition,
 					        window,
 					        &ime->eventImeData);
 					break;
@@ -1021,12 +1021,12 @@ LRESULT WINAPI GHOST_SystemWin32::s_wndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 					ime->ResetComposition(hwnd);
 					ime->DestroyImeWindow(hwnd);
 					event = processImeEvent(
-					        GHOST_kEventImeCompositionEnd,
+					        GHOST_kEventIMCompositionEnd,
 					        window,
 					        &ime->eventImeData);
 					break;
 				}
-#endif /* WITH_INPUT_IME */
+#endif /* WITH_IM_ONTHESPOT */
 				////////////////////////////////////////////////////////////////////////
 				// Keyboard events, ignored
 				////////////////////////////////////////////////////////////////////////

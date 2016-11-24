@@ -54,9 +54,9 @@
 
 #include "MEM_guardedalloc.h"
 
-/* Cached IME support flags */
-static bool ime_is_lang_supported = false;
-static void blt_lang_check_ime_supported(void);
+/* Cached IM support flags */
+static bool im_is_lang_supported = false;
+static void blt_lang_check_im_supported(void);
 
 #ifdef WITH_INTERNATIONAL
 
@@ -284,7 +284,7 @@ void BLT_lang_set(const char *str)
 #else
 	(void)str;
 #endif
-	blt_lang_check_ime_supported();
+	blt_lang_check_im_supported();
 }
 
 /* Get the current locale (short code, e.g. es_ES). */
@@ -361,31 +361,28 @@ void BLT_lang_locale_explode(
 	}
 }
 
-/* Test if the translation context allows IME input - used to
- * avoid weird character drawing if IME inputs non-ascii chars.
+/* Test if the translation context allows IM input - used to
+ * avoid weird character drawing if IM inputs non-ascii chars.
  */
-static void blt_lang_check_ime_supported(void)
+static void blt_lang_check_im_supported(void)
 {
-#ifdef WITH_INPUT_IME
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+
+#ifdef _WIN32
 	const char *uilng = BLT_lang_get();
 	if (U.transopts & USER_DOTRANSLATE) {
-		ime_is_lang_supported = STREQ(uilng, "zh_CN") ||
-		                        STREQ(uilng, "zh_TW") ||
-		                        STREQ(uilng, "ja_JP");
-	}
-	else {
-		ime_is_lang_supported = false;
+		im_is_lang_supported = STREQ(uilng, "zh_CN") ||
+		                       STREQ(uilng, "zh_TW") ||
+		                       STREQ(uilng, "ja_JP");
 	}
 #else
-	ime_is_lang_supported = false;
+	im_is_lang_supported = true;
 #endif
+
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 }
 
-bool BLT_lang_is_ime_supported(void)
+bool BLT_lang_is_im_supported(void)
 {
-#ifdef WITH_INPUT_IME
-	return ime_is_lang_supported;
-#else
-	return false;
-#endif
+	return im_is_lang_supported;
 }

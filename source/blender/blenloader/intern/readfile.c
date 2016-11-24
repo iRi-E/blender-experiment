@@ -6154,8 +6154,8 @@ static void direct_link_windowmanager(FileData *fd, wmWindowManager *wm)
 		win->eventstate = NULL;
 		win->curswin = NULL;
 		win->tweak = NULL;
-#ifdef WIN32
-		win->ime_data = NULL;
+#ifndef WITH_IM_ONTHESPOT
+		win->im_data = NULL;
 #endif
 		
 		BLI_listbase_clear(&win->queue);

@@ -50,6 +50,10 @@
 #include "BLI_utildefines.h"
 #include "BLI_math.h"
 
+#ifdef WITH_IM_ONTHESPOT
+#  include "BLT_lang.h"
+#endif
+
 #include "BKE_context.h"
 #include "BKE_idprop.h"
 #include "BKE_global.h"
@@ -3505,34 +3509,34 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			break;
 		}
 
-#ifdef WITH_INPUT_IME
-		case GHOST_kEventImeCompositionStart:
+#ifdef WITH_IM_ONTHESPOT
+		case GHOST_kEventIMCompositionStart:
 		{
 			event.val = KM_PRESS;
-			win->ime_data = customdata;
-			win->ime_data->is_ime_composing = true;
-			event.type = WM_IME_COMPOSITE_START;
+			win->im_data = customdata;
+			win->im_data->is_im_composing = true;
+			event.type = WM_IM_COMPOSITE_START;
 			wm_event_add(win, &event);
 			break;
 		}
-		case GHOST_kEventImeComposition:
+		case GHOST_kEventIMComposition:
 		{
 			event.val = KM_PRESS;
-			event.type = WM_IME_COMPOSITE_EVENT;
+			event.type = WM_IM_COMPOSITE_EVENT;
 			wm_event_add(win, &event);
 			break;
 		}
-		case GHOST_kEventImeCompositionEnd:
+		case GHOST_kEventIMCompositionEnd:
 		{
 			event.val = KM_PRESS;
-			if (win->ime_data) {
-				win->ime_data->is_ime_composing = false;
+			if (win->im_data) {
+				win->im_data->is_im_composing = false;
 			}
-			event.type = WM_IME_COMPOSITE_END;
+			event.type = WM_IM_COMPOSITE_END;
 			wm_event_add(win, &event);
 			break;
 		}
-#endif /* WITH_INPUT_IME */
+#endif /* WITH_IM_ONTHESPOT */
 
 	}
 
@@ -3642,12 +3646,13 @@ bool WM_event_is_tablet(const struct wmEvent *event)
 	return (event->tablet_data) ? true : false;
 }
 
-#ifdef WITH_INPUT_IME
-/* most os using ctrl/oskey + space to switch ime, avoid added space */
-bool WM_event_is_ime_switch(const struct wmEvent *event)
+#ifdef WITH_IM_ONTHESPOT
+/* most os using ctrl/oskey + space to switch IM, avoid added space */
+bool WM_event_is_im_switch(const struct wmEvent *event)
 {
-	return event->val == KM_PRESS && event->type == SPACEKEY &&
-	       (event->ctrl || event->oskey || event->shift || event->alt);
+	return (BLT_lang_is_im_supported() &&
+		event->val == KM_PRESS && event->type == SPACEKEY &&
+		(event->ctrl || event->oskey || event->shift || event->alt));
 }
 #endif
 

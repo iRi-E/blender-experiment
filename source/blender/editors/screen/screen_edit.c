@@ -1419,7 +1419,7 @@ void ED_screen_set_subwinactive(bContext *C, wmEvent *event)
 			for (ar = sa->regionbase.first; ar; ar = ar->next) {
 				if (BLI_rcti_isect_pt_v(&ar->winrct, &event->x)) {
 					scr->subwinactive = ar->swinid;
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 					/* redraw region to place input method's sub-window on appropriate location */
 					if (oldswin != scr->subwinactive) {
 						ED_region_tag_redraw(ar);

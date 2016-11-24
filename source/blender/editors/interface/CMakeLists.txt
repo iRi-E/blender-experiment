@@ -69,7 +69,7 @@ if(WITH_HEADLESS)
 	add_definitions(-DWITH_HEADLESS)
 elseif(WITH_X11)
 	if(WITH_X11_XINPUT)
-		add_definitions(-DWITH_INPUT_METHOD)
+		add_definitions(-DWITH_IM_OVERTHESPOT)
 	endif()
 endif()
 
@@ -79,7 +79,7 @@ endif()
 
 if(WIN32)
 	if(WITH_INPUT_IME)
-		add_definitions(-DWITH_INPUT_IME)
+		add_definitions(-DWITH_IM_ONTHESPOT)
 	endif()
 endif()
 

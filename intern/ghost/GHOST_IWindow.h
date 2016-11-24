@@ -332,7 +332,7 @@ public:
 
 	virtual float getNativePixelSize(void) = 0;
 
-#ifdef WITH_INPUT_METHOD
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	/**
          * Set location of the preedit sub-window of input method (e.g. XIM).
          * This takes effect when the input method server supports over-the-spot or
@@ -363,31 +363,7 @@ public:
          * false: Deactivate input method but do nothing if already in modal input
          */
 	virtual void endIM(int modal) = 0;
-#endif /* WITH_INPUT_METHOD */
-
-#ifdef WITH_INPUT_IME
-	/**
-	 * Enable IME attached to the given window, i.e. allows user-input
-	 * events to be dispatched to the IME.
-	 * \param x Requested x-coordinate of the rectangle
-	 * \param y Requested y-coordinate of the rectangle
-	 * \param w Requested width of the rectangle
-	 * \param h Requested height of the rectangle
-	 * \param complete Whether or not to complete the ongoing composition
-	 * true:  Start a new composition
-	 * false: Move the IME windows to the given position without finishing it.
-	 */
-	virtual void beginIME(
-	        GHOST_TInt32 x, GHOST_TInt32 y,
-	        GHOST_TInt32 w, GHOST_TInt32 h,
-	        int completed) = 0;
-
-	/**
-	 * Disable the IME attached to the given window, i.e. prohibits any user-input
-	 * events from being dispatched to the IME.
-	 */
-	virtual void endIME() = 0;
-#endif /* WITH_INPUT_IME */
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 	
 #ifdef WITH_CXX_GUARDEDALLOC
 	MEM_CXX_CLASS_ALLOC_FUNCS("GHOST:GHOST_IWindow")

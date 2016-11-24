@@ -295,27 +295,11 @@ public:
 		return 1.0f;
 	}
 
-#ifdef WITH_INPUT_METHOD
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
 	virtual void beginIM(int modal) = 0;
 	virtual void endIM(int modal) = 0;
-#endif /* WITH_INPUT_METHOD */
-
-#ifdef WITH_INPUT_IME
-	virtual void beginIME(GHOST_TInt32 x,
-	                      GHOST_TInt32 y,
-	                      GHOST_TInt32 w,
-	                      GHOST_TInt32 h,
-	                      int completed)
-	{
-		/* do nothing temporarily if not in windows */
-	}
-
-	virtual void endIME()
-	{
-		/* do nothing temporarily if not in windows */
-	}
-#endif /* WITH_INPUT_IME */
+#endif
 
 protected:
 	/**

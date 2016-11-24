@@ -69,7 +69,7 @@
 #include "RNA_access.h"
 
 #include "UI_resources.h"
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 #  include "UI_interface.h"
 #endif
 
@@ -1466,16 +1466,16 @@ static void view3d_id_remap(ScrArea *sa, SpaceLink *slink, ID *old_id, ID *new_i
 	}
 }
 
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 static void view3d_im_begin(const bContext *C, ARegion *ar)
 {
 	wmWindow *win = CTX_wm_window(C);
 	Object *obedit = CTX_data_edit_object(C);
 	if (obedit && obedit->type == OB_FONT) {
-		UI_textedit_im_begin(win, false);
-		UI_im_spot_set(win, ar, 0, 0);
+		WM_window_IM_begin(win, false);
+		UI_region_im_spot_set(win, ar, 0, 0, false);
 	} else {
-		UI_textedit_im_end(win, false);
+		WM_window_IM_end(win, false);
 	}
 }
 #endif
@@ -1512,7 +1512,7 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_main_region_listener;
 	art->cursor = view3d_main_region_cursor;
 	art->lock = 1;   /* can become flag, see BKE_spacedata_draw_locks */
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 	art->im_begin = view3d_im_begin;
 #endif
 	BLI_addhead(&st->regiontypes, art);
@@ -1525,7 +1525,7 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_buttons_region_init;
 	art->draw = view3d_buttons_region_draw;
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 	art->im_begin = view3d_im_begin;
 #endif
 	BLI_addhead(&st->regiontypes, art);
@@ -1541,7 +1541,7 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 	art->im_begin = view3d_im_begin;
 #endif
 	BLI_addhead(&st->regiontypes, art);
@@ -1560,7 +1560,7 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_props_region_listener;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 	art->im_begin = view3d_im_begin;
 #endif
 	BLI_addhead(&st->regiontypes, art);

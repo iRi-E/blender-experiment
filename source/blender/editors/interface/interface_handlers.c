@@ -88,11 +88,6 @@
 #include "WM_api.h"
 #include "WM_types.h"
 
-#ifdef WITH_INPUT_IME
-#  include "wm_window.h"
-#  include "BLT_lang.h"
-#endif
-
 /* place the mouse at the scaled down location when un-grabbing */
 #define USE_CONT_MOUSE_CORRECT
 /* support dragging toggle buttons */
@@ -2994,78 +2989,32 @@ static bool ui_textedit_copypaste(uiBut *but, uiHandleButtonData *data, const in
 	return changed;
 }
 
-#ifdef WITH_INPUT_METHOD
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+void UI_region_im_spot_set(wmWindow *win, ARegion *ar, int x, int y, bool force)
+{
+	ui_region_to_window(ar, &x, &y);
+	WM_window_IM_spot_set(win, x, y, force);
+}
+
 void ui_but_im_spot_set(uiBut *but, int x, int y)
 {
 	BLI_assert(but->active);
 
-	ui_region_to_window(but->active->region, &x, &y);
-	WM_window_IM_spot_set(but->active->window, x, y, true);
+	UI_region_im_spot_set(but->active->window, but->active->region, x, y, true);
 }
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 
-void UI_im_spot_set(wmWindow *win, ARegion *ar, int x, int y)
-{
-	ui_region_to_window(ar, &x, &y);
-	WM_window_IM_spot_set(win, x, y, false);
-}
-
-void UI_textedit_im_begin(wmWindow *win, bool modal)
-{
-	WM_window_IM_begin(win, modal);
-}
-
-void UI_textedit_im_end(wmWindow *win, bool modal)
-{
-	WM_window_IM_end(win, modal);
-}
-
-void UI_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
-{
-	UI_textedit_im_begin(CTX_wm_window(C), false);
-}
-#endif
-
-#ifdef WITH_INPUT_IME
-/* enable ime, and set up uibut ime data */
-static void ui_textedit_ime_begin(wmWindow *win, uiBut *UNUSED(but))
-{
-	/* XXX Is this really needed? */
-	int x, y;
-
-	BLI_assert(win->ime_data == NULL);
-
-	/* enable IME and position to cursor, it's a trick */
-	x = win->eventstate->x;
-	/* flip y and move down a bit, prevent the IME panel cover the edit button */
-	y = win->eventstate->y - 12;
-
-	wm_window_IME_begin(win, x, y, 0, 0, true);
-}
-
-/* disable ime, and clear uibut ime data */
-static void ui_textedit_ime_end(wmWindow *win, uiBut *UNUSED(but))
-{
-	wm_window_IME_end(win);
-}
-
-void ui_but_ime_reposition(uiBut *but, int x, int y, bool complete)
-{
-	BLI_assert(but->active);
-
-	ui_region_to_window(but->active->region, &x, &y);
-	wm_window_IME_begin(but->active->window, x, y - 4, 0, 0, complete);
-}
-
-wmIMEData *ui_but_ime_data_get(uiBut *but)
+#ifdef WITH_IM_ONTHESPOT
+wmIMData *ui_but_im_data_get(uiBut *but)
 {
 	if (but->active && but->active->window) {
-		return but->active->window->ime_data;
+		return but->active->window->im_data;
 	}
 	else {
 		return NULL;
 	}
 }
-#endif  /* WITH_INPUT_IME */
+#endif  /* WITH_IM_ONTHESPOT */
 
 static void ui_textedit_begin(bContext *C, uiBut *but, uiHandleButtonData *data)
 {
@@ -3146,15 +3095,9 @@ static void ui_textedit_begin(bContext *C, uiBut *but, uiHandleButtonData *data)
 
 	WM_cursor_modal_set(win, BC_TEXTEDITCURSOR);
 
-#ifdef WITH_INPUT_METHOD
-	if (is_num_but == false) {
-		UI_textedit_im_begin(win, true);
-	}
-#endif
-#ifdef WITH_INPUT_IME
-	if (is_num_but == false && BLT_lang_is_ime_supported()) {
-		ui_textedit_ime_begin(win, but);
-	}
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	if (is_num_but == false)
+		WM_window_IM_begin(win, true);
 #endif
 }
 
@@ -3194,13 +3137,8 @@ static void ui_textedit_end(bContext *C, uiBut *but, uiHandleButtonData *data)
 	
 	WM_cursor_modal_restore(win);
 
-#ifdef WITH_INPUT_METHOD
-	UI_textedit_im_end(win, true);
-#endif
-#ifdef WITH_INPUT_IME
-	if (win->ime_data) {
-		ui_textedit_ime_end(win, but);
-	}
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	WM_window_IM_end(win, true);
 #endif
 }
 
@@ -3268,12 +3206,12 @@ static void ui_do_but_textedit(
 	int retval = WM_UI_HANDLER_CONTINUE;
 	bool changed = false, inbox = false, update = false;
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 	wmWindow *win = CTX_wm_window(C);
-	wmIMEData *ime_data = win->ime_data;
-	bool is_ime_composing = ime_data && ime_data->is_ime_composing;
+	wmIMData *im_data = win->im_data;
+	bool is_im_composing = im_data && im_data->is_im_composing;
 #else
-	bool is_ime_composing = false;
+	bool is_im_composing = false;
 #endif
 
 	switch (event->type) {
@@ -3296,9 +3234,9 @@ static void ui_do_but_textedit(
 		case RIGHTMOUSE:
 		case ESCKEY:
 			if (event->val == KM_PRESS) {
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 				/* skips button handling since it is not wanted */
-				if (is_ime_composing) {
+				if (is_im_composing) {
 					break;
 				}
 #endif
@@ -3360,7 +3298,7 @@ static void ui_do_but_textedit(
 		}
 	}
 
-	if (event->val == KM_PRESS && !is_ime_composing) {
+	if (event->val == KM_PRESS && !is_im_composing) {
 		switch (event->type) {
 			case VKEY:
 			case XKEY:
@@ -3482,10 +3420,9 @@ static void ui_do_but_textedit(
 
 		if ((event->ascii || event->utf8_buf[0]) &&
 		    (retval == WM_UI_HANDLER_CONTINUE)
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 		    &&
-		    !is_ime_composing &&
-		    (!WM_event_is_ime_switch(event) || !BLT_lang_is_ime_supported())
+		    !(is_im_composing || WM_event_is_im_switch(event))
 #endif
 		    )
 		{
@@ -3524,21 +3461,21 @@ static void ui_do_but_textedit(
 		}
 	}
 
-#ifdef WITH_INPUT_IME
-	if (event->type == WM_IME_COMPOSITE_START || event->type == WM_IME_COMPOSITE_EVENT) {
+#ifdef WITH_IM_ONTHESPOT
+	if (event->type == WM_IM_COMPOSITE_START || event->type == WM_IM_COMPOSITE_EVENT) {
 		changed = true;
 
-		if (event->type == WM_IME_COMPOSITE_START && but->selend > but->selsta) {
+		if (event->type == WM_IM_COMPOSITE_START && but->selend > but->selsta) {
 			ui_textedit_delete_selection(but, data);
 		}
-		if (event->type == WM_IME_COMPOSITE_EVENT && ime_data->result_len) {
+		if (event->type == WM_IM_COMPOSITE_EVENT && im_data->result_len) {
 			ui_textedit_insert_buf(
 			        but, data,
-			        ime_data->str_result,
-			        ime_data->result_len);
+			        im_data->str_result,
+			        im_data->result_len);
 		}
 	}
-	else if (event->type == WM_IME_COMPOSITE_END) {
+	else if (event->type == WM_IM_COMPOSITE_END) {
 		changed = true;
 	}
 #endif

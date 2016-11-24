@@ -73,6 +73,12 @@ if(WITH_INTERNATIONAL)
 	add_definitions(-DWITH_INTERNATIONAL)
 endif()
 
+if(WIN32)
+	if(WITH_INPUT_IME)
+		add_definitions(-DWITH_IM_ONTHESPOT)
+	endif()
+endif()
+
 if(WITH_CODEC_FFMPEG)
 	add_definitions(-DWITH_FFMPEG)
 endif()
