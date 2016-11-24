@@ -32,7 +32,7 @@
 #ifndef __GHOST_IME_H__
 #define __GHOST_IME_H__
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -323,7 +323,7 @@ public:
 	void CheckFirst(HWND window_handle);
 
 	ImeComposition resultInfo, compInfo;
-	GHOST_TEventImeData eventImeData;
+	GHOST_TEventIMData eventImeData;
 
 protected:
 	/* Determines whether or not the given attribute represents a target (a.k.a. a selection). */
@@ -401,5 +401,5 @@ private:
 	bool is_first, is_enable;
 };
 
-#endif // WITH_INPUT_IME
+#endif // WITH_IM_ONTHESPOT
 #endif // __GHOST_IME_H__

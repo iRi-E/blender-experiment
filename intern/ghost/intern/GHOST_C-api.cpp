@@ -920,7 +920,7 @@ GHOST_TUns16 GHOST_GetDPIHint(GHOST_WindowHandle windowhandle)
 	return window->getDPIHint();
 }
 
-#ifdef WITH_INPUT_METHOD
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
@@ -938,23 +938,4 @@ void GHOST_EndIM(GHOST_WindowHandle windowhandle, int modal)
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
 	window->endIM(modal);
 }
-#endif /* WITH_INPUT_METHOD */
-
-#ifdef WITH_INPUT_IME
-
-void GHOST_BeginIME(GHOST_WindowHandle windowhandle,
-                    GHOST_TInt32 x, GHOST_TInt32 y,
-                    GHOST_TInt32 w, GHOST_TInt32 h,
-                    int complete)
-{
-	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->beginIME(x, y, w, h, complete);
-}
-
-void GHOST_EndIME(GHOST_WindowHandle windowhandle)
-{
-	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->endIME();
-}
-
-#endif  /* WITH_INPUT_IME */
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */

@@ -296,7 +296,7 @@ protected:
 	 */
 	static GHOST_Event *processWindowEvent(GHOST_TEventType type, GHOST_WindowWin32 *window);
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 	/**
 	 * Creates a IME event.
 	 * \param type		The type of event to create.
@@ -304,8 +304,8 @@ protected:
 	 * \param data		IME data.
 	 * \return The event created.
 	 */
-	static GHOST_Event *processImeEvent(GHOST_TEventType type, GHOST_WindowWin32 *window, GHOST_TEventImeData *data);
-#endif // WITH_INPUT_IME
+	static GHOST_Event *processImeEvent(GHOST_TEventType type, GHOST_WindowWin32 *window, GHOST_TEventIMData *data);
+#endif // WITH_IM_ONTHESPOT
 
 	/**
 	 * Handles minimum window size.

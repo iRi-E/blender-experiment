@@ -30,7 +30,7 @@
  *  \ingroup GHOST
  */
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 
 #include "GHOST_C-api.h"
 #include "GHOST_ImeWin32.h"
@@ -517,4 +517,4 @@ void GHOST_ImeWin32::UpdateInfo(HWND window_handle)
 	}
 }
 
-#endif // WITH_INPUT_IME
+#endif // WITH_IM_ONTHESPOT

@@ -453,9 +453,9 @@ static void text_main_region_draw(const bContext *C, ARegion *ar)
 	
 	/* scrollers? */
 
-#ifdef WITH_INPUT_METHOD
+#ifdef WITH_IM_OVERTHESPOT
 	if ((cursor_xy[0] != -1) && (CTX_wm_screen(C)->subwinactive == ar->swinid)) {
-		UI_im_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1]);
+		UI_region_im_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1], false);
 	}
 #endif
 }
@@ -613,8 +613,8 @@ void ED_spacetype_text(void)
 	art->draw = text_main_region_draw;
 	art->cursor = text_cursor;
 	art->event_cursor = true;
-#ifdef WITH_INPUT_METHOD
-	art->im_begin = UI_region_generic_im_begin;
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = ED_region_generic_im_begin;
 #endif
 
 	BLI_addhead(&st->regiontypes, art);
