@@ -366,6 +366,8 @@ private:
 	bool m_focused;
 	bool m_xim_needed;
 	bool m_xim_modal;
+	GHOST_TInt32 m_xim_spot_x;
+	GHOST_TInt32 m_xim_spot_y;
 #endif
 
 	bool m_valid_setup;
