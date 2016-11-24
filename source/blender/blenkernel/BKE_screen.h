@@ -147,8 +147,8 @@ typedef struct ARegionType {
 	/* return context data */
 	int (*context)(const struct bContext *, const char *, struct bContextDataResult *);
 
-	/* make input method active if necessary (currently used only for XIM)*/
-	void (*im_begin)(const struct bContext *, struct ARegion *);
+	/* activate/deactivate input method and return true if needs redraw (currently used only for XIM)*/
+	bool (*im_begin)(const struct bContext *, struct ARegion *);
 
 	/* custom drawing callbacks */
 	ListBase drawcalls;

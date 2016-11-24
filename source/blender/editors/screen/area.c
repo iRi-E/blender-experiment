@@ -508,11 +508,10 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 
 #ifdef WITH_IM_OVERTHESPOT
 	if (CTX_wm_screen(C)->subwinactive == ar->swinid) {
-		if (at->im_begin) {
+		if (at->im_begin)
 			at->im_begin(C, ar);
-		} else {
+		else
 			WM_window_IM_end(win, false);
-		}
 	}
 #endif
 	
@@ -558,9 +557,10 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 }
 
 #ifdef WITH_IM_OVERTHESPOT
-void ED_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
+bool ED_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
 {
 	WM_window_IM_begin(CTX_wm_window(C), false);
+	return true;
 }
 #endif
 
