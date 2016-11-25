@@ -1117,13 +1117,11 @@ void ED_screen_set_subwinactive(bContext *C, const wmEvent *event)
 					scr->subwinactive = ar->swinid;
 #ifdef WITH_IM_OVERTHESPOT
 					if (oldswin != scr->subwinactive) {
-						if (ar->type && ar->type->im_begin) {
-							if (ar->type->im_begin(C, ar))
-								/* redraw region to calculate IM spot location */
-								ED_region_tag_redraw(ar);
-						} else {
+						if (ar->type && ar->type->im_begin)
+							/* this may cause redraw to calculate spot location */
+							ar->type->im_begin(C, ar);
+						else
 							WM_window_IM_end(win, false);
-						}
 					}
 #endif
 					break;

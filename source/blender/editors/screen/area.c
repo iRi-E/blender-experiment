@@ -557,10 +557,13 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 }
 
 #ifdef WITH_IM_OVERTHESPOT
-bool ED_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
+void ED_region_generic_im_begin(const bContext *C, ARegion *ar)
 {
 	WM_window_IM_begin(CTX_wm_window(C), false);
-	return true;
+
+	/* redraw region to calculate IM spot location
+	 * note, this doesn't do nothing in ED_region_do_draw() */
+	ED_region_tag_redraw(ar);
 }
 #endif
 
