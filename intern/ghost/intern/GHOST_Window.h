@@ -296,7 +296,7 @@ public:
 	}
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
+	virtual bool setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
 	virtual void beginIM(int modal) = 0;
 	virtual void endIM(int modal) = 0;
 #endif

@@ -334,16 +334,17 @@ public:
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	/**
-         * Set location of the preedit sub-window of input method (e.g. XIM).
+         * Set spot location of input method, used for placing composing window.
          * This takes effect when the input method server supports over-the-spot or
-         * on-the-spot input style.
+         * on-the-spot input style. x=-1 means use cached spot location if possible.
          * \param x Requested x-coordinate that the preedit window will be placed
          * \param y Requested y-coordinate that the preedit window will be placed
          * \param force Whether or not to set location when doing modal input
+         * \return True if failed to use cache and needs redraw
          * true:  Set location unconditionally
          * false: Do nothing when doing modal input
          */
-	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
+	virtual bool setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
 
 	/**
          * Enable input method attached to the given window, i.e. allows user-input

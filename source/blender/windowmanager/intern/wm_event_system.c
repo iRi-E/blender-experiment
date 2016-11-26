@@ -2408,7 +2408,19 @@ void wm_event_do_handlers(bContext *C)
 			/* we let modal handlers get active area/region, also wm_paintcursor_test needs it */
 			CTX_wm_area_set(C, area_event_inside(C, &event->x));
 			CTX_wm_region_set(C, region_event_inside(C, &event->x));
-			
+
+#ifdef WITH_IM_OVERTHESPOT
+			if (event->type == WM_IM_COMPOSITE_EVENT) {
+				/* set IM spot using cache if possible */
+				if (WM_window_IM_spot_set(win, -1, -1, false))
+					/* if failed, redraw region to calculate spot location */
+					ED_region_tag_redraw(CTX_wm_region(C));
+				BLI_remlink(&win->queue, event);
+				wm_event_free(event);
+				continue;
+			}
+#endif
+
 			/* MVC demands to not draw in event handlers... but we need to leave it for ogl selecting etc */
 			wm_window_make_drawable(wm, win);
 			
@@ -3509,6 +3521,14 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			break;
 		}
 
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+		case GHOST_kEventIMComposition:
+		{
+			event.val = KM_PRESS;
+			event.type = WM_IM_COMPOSITE_EVENT;
+			wm_event_add(win, &event);
+			break;
+		}
 #ifdef WITH_IM_ONTHESPOT
 		case GHOST_kEventIMCompositionStart:
 		{
@@ -3516,13 +3536,6 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			win->im_data = customdata;
 			win->im_data->is_im_composing = true;
 			event.type = WM_IM_COMPOSITE_START;
-			wm_event_add(win, &event);
-			break;
-		}
-		case GHOST_kEventIMComposition:
-		{
-			event.val = KM_PRESS;
-			event.type = WM_IM_COMPOSITE_EVENT;
 			wm_event_add(win, &event);
 			break;
 		}
@@ -3537,6 +3550,7 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			break;
 		}
 #endif /* WITH_IM_ONTHESPOT */
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 
 	}
 

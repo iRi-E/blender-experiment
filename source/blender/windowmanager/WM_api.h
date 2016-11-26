@@ -106,7 +106,7 @@ struct wmWindow *WM_window_open_temp(struct bContext *C, const struct rcti *rect
 
 			/* input method */
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
+bool		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
 void		WM_window_IM_begin	(wmWindow *win, bool modal);
 void		WM_window_IM_end	(wmWindow *win, bool modal);
 #endif

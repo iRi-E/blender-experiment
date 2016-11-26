@@ -1061,13 +1061,15 @@ GHOST_TSuccess GHOST_WindowWin32::endProgressBar()
 
 #ifdef WITH_IM_ONTHESPOT
 /* Currently, Win32 uses modal input only */
-void GHOST_WindowWin32::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
+bool GHOST_WindowWin32::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
 {
 	if (force) {
 		x += 5;
 		y -= 1;
 		m_imeImput.BeginIME(m_hWnd, GHOST_Rect(x, y, x, y), false);
 	}
+
+	return false;
 }
 
 void GHOST_WindowWin32::beginIM(int modal)

@@ -257,7 +257,7 @@ public:
 #ifdef WITH_IM_ONTHESPOT
 	GHOST_ImeWin32 *getImeInput() {return &m_imeImput;}
 
-	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force);
+	bool setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force);
 	void beginIM(int modal);
 	void endIM(int modal);
 #endif /* WITH_IM_ONTHESPOT */

@@ -915,10 +915,10 @@ float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle)
 }
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force)
+int GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->setIMSpot(x, y, force);
+	return window->setIMSpot(x, y, force);
 }
 
 void GHOST_BeginIM(GHOST_WindowHandle windowhandle, int modal)

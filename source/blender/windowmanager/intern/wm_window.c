@@ -1714,14 +1714,14 @@ bool WM_window_is_fullscreen(wmWindow *win)
 }
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void WM_window_IM_spot_set(wmWindow *win, int x, int y, bool force)
+bool WM_window_IM_spot_set(wmWindow *win, int x, int y, bool force)
 {
 	if (!BLT_lang_is_im_supported())
-		return;
+		return false;
 
 	BLI_assert(win);
 
-	GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, force);
+	return GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, force);
 }
 
 void WM_window_IM_begin(wmWindow *win, bool modal)

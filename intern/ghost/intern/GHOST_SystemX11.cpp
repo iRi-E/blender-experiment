@@ -553,9 +553,21 @@ processEvents(
 
 			/* dispatch event to XIM server */
 			if ((XFilterEvent(&xevent, (Window)NULL) == True) && (xevent.type != KeyRelease)) {
-				/* do nothing now, the event is consumed by XIM.
-				 * however, KeyRelease event should be processed
+				/* notify handler that the event is consumed by XIM. this triggers
+				 * redrawing active region to calculate spot location.
+				 * KeyRelease event consumed by XIM will be normally processed
 				 * here, otherwise modifiers remain activated.   */
+				GHOST_WindowX11 * window = findGhostWindow(xevent.xany.window);
+				if (window) {
+					pushEvent(new GHOST_EventKey(
+							  getMilliSeconds(),
+							  GHOST_kEventIMComposition,
+							  window,
+							  GHOST_kKeyUnknown,
+							  '\0',
+							  NULL));
+					anyProcessed = true;
+				}
 				continue;
 			}
 #endif

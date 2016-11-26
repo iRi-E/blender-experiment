@@ -712,17 +712,27 @@ void GHOST_WindowX11::setX11_ICFocus(bool focused)
 	m_focused = focused;
 }
 
-void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
+bool GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
 {
 	if (!force && m_xim_modal)
-		return;
+		return false;
 
 	if (!m_xic || (m_xim_style & XIMPreeditNothing))
-		return;
+		return false;
 
 	if ((m_xim_spot_x != -1) &&
 	    (x == m_xim_spot_x) && (y == m_xim_spot_y))
-		return;
+		return false;
+
+	/* try to use cache */
+	if (x == -1) {
+		if (m_xim_spot_x != -1) {
+			x = m_xim_spot_x;
+			y = m_xim_spot_y;
+		} else {
+			return true;
+		}
+	}
 
 	/* Note: This code takes effect only for over-the-spot style.
 	 * If using on-the-spot style, XIM server will ignore the request.
@@ -734,6 +744,8 @@ void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
 
 	m_xim_spot_x = x;
 	m_xim_spot_y = y;
+
+	return false;
 }
 
 void GHOST_WindowX11::beginIM(int modal)
