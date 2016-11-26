@@ -107,7 +107,7 @@ void             WM_window_set_dpi(wmWindow *win);
 			
 			/* input method */
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
+bool		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
 void		WM_window_IM_begin	(wmWindow *win, bool modal);
 void		WM_window_IM_end	(wmWindow *win, bool modal);
 #endif
