@@ -913,7 +913,7 @@ extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
 extern GHOST_TUns16 GHOST_GetDPIHint(GHOST_WindowHandle windowhandle);
 
 /**
- * Set spot location of input method, used for placing composing window.
+ * Set spot location of input method, used for placing composition window.
  * This takes effect when the input method server supports over-the-spot or
  * on-the-spot input style. x=-1 means use cached spot location if possible.
  * \param windowhandle Window handle of the caller
