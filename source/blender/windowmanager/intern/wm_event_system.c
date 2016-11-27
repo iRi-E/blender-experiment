@@ -3529,6 +3529,8 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			wm_event_add(win, &event);
 			break;
 		}
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
+
 #ifdef WITH_IM_ONTHESPOT
 		case GHOST_kEventIMCompositionStart:
 		{
@@ -3550,7 +3552,6 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			break;
 		}
 #endif /* WITH_IM_ONTHESPOT */
-#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 
 	}
 

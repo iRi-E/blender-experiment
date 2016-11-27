@@ -334,7 +334,7 @@ public:
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	/**
-         * Set spot location of input method, used for placing composing window.
+         * Set spot location of input method, used for placing composition window.
          * This takes effect when the input method server supports over-the-spot or
          * on-the-spot input style. x=-1 means use cached spot location if possible.
          * \param x Requested x-coordinate that the preedit window will be placed
