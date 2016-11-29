@@ -908,18 +908,27 @@ extern int GHOST_UseNativePixels(void);
 extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
 
 /**
+ * Return whether input method needs spot location to be set. Typically,
+ * calling GHOST_EndIM() and GHOST_BeginIM() resets the spot location,
+ * so the return value becomes true after that. This function makes sense
+ * only for over-the-spot input style.
+ * \param windowhandle Window handle of the caller
+ * \return true if spot location needs to be set, false if not
+ */
+extern int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle);
+
+/**
  * Set spot location of input method, used for placing composition window.
  * This takes effect when the input method server supports over-the-spot or
- * on-the-spot input style. x=-1 means use cached spot location if possible.
+ * on-the-spot input style.
  * \param windowhandle Window handle of the caller
  * \param x Requested x-coordinate that the preedit window will be placed
  * \param y Requested y-coordinate that the preedit window will be placed
  * \param force Whether or not to set location when doing modal input
- * \return True if failed to use cache and needs redraw
  * true:  Set location unconditionally
  * false: Do nothing when doing modal input
  */
-extern int GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force);
+extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force);
 
 /**
  * Enable input method attached to the given window, i.e. allows user-input

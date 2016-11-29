@@ -332,19 +332,29 @@ public:
 
 	virtual float getNativePixelSize(void) = 0;
 
+#ifdef WITH_IM_OVERTHESPOT
+	/**
+         * Return whether input method needs spot location to be set. Typically,
+         * calling EndIM() and BeginIM() resets the spot location, so the return
+         * value becomes true after that. This function makes sense only for
+         * over-the-spot input style.
+         * \return true if spot location needs to be set, false if not
+         */
+	virtual bool isIMSpotNeeded() = 0;
+#endif
+
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	/**
          * Set spot location of input method, used for placing composition window.
          * This takes effect when the input method server supports over-the-spot or
-         * on-the-spot input style. x=-1 means use cached spot location if possible.
+         * on-the-spot input style.
          * \param x Requested x-coordinate that the preedit window will be placed
          * \param y Requested y-coordinate that the preedit window will be placed
          * \param force Whether or not to set location when doing modal input
-         * \return True if failed to use cache and needs redraw
          * true:  Set location unconditionally
          * false: Do nothing when doing modal input
          */
-	virtual bool setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
 
 	/**
          * Enable input method attached to the given window, i.e. allows user-input

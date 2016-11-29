@@ -1713,15 +1713,27 @@ bool WM_window_is_fullscreen(wmWindow *win)
 	return win->windowstate == GHOST_kWindowStateFullScreen;
 }
 
-#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-bool WM_window_IM_spot_set(wmWindow *win, int x, int y, bool force)
+#ifdef WITH_IM_OVERTHESPOT
+bool WM_window_IM_is_spot_needed(wmWindow *win)
 {
 	if (!BLT_lang_is_im_supported())
 		return false;
 
 	BLI_assert(win);
 
-	return GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, force);
+	return GHOST_IsIMSpotNeeded(win->ghostwin);
+}
+#endif
+
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+void WM_window_IM_spot_set(wmWindow *win, int x, int y, bool force)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+
+	GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, force);
 }
 
 void WM_window_IM_begin(wmWindow *win, bool modal)

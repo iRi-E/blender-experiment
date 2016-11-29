@@ -214,7 +214,8 @@ public:
 	void setX11_ICFocus(bool focused);
 
 	/* public API */
-	bool setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force);
+	bool isIMSpotNeeded();
+	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force);
 	void beginIM(int modal);
 	void endIM(int modal);
 #endif

@@ -2411,9 +2411,8 @@ void wm_event_do_handlers(bContext *C)
 
 #ifdef WITH_IM_OVERTHESPOT
 			if (event->type == WM_IM_COMPOSITE_EVENT) {
-				/* set IM spot using cache if possible */
-				if (WM_window_IM_spot_set(win, -1, -1, false))
-					/* if failed, redraw region to calculate spot location */
+				if (WM_window_IM_is_spot_needed(win))
+					/* if spot location is not set yet, redraw region to calculate it */
 					ED_region_tag_redraw(CTX_wm_region(C));
 				BLI_remlink(&win->queue, event);
 				wm_event_free(event);
