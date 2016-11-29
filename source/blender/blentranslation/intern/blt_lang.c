@@ -54,9 +54,11 @@
 
 #include "MEM_guardedalloc.h"
 
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 /* Cached IM support flags */
 static bool im_is_lang_supported = false;
 static void blt_lang_check_im_supported(void);
+#endif
 
 #ifdef WITH_INTERNATIONAL
 
@@ -284,7 +286,9 @@ void BLT_lang_set(const char *str)
 #else
 	(void)str;
 #endif
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	blt_lang_check_im_supported();
+#endif
 }
 
 /* Get the current locale (short code, e.g. es_ES). */
@@ -361,13 +365,12 @@ void BLT_lang_locale_explode(
 	}
 }
 
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 /* Test if the translation context allows IM input - used to
  * avoid weird character drawing if IM inputs non-ascii chars.
  */
 static void blt_lang_check_im_supported(void)
 {
-#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-
 #ifdef _WIN32
 	const char *uilng = BLT_lang_get();
 	if (U.transopts & USER_DOTRANSLATE) {
@@ -377,12 +380,15 @@ static void blt_lang_check_im_supported(void)
 	}
 #else
 	im_is_lang_supported = true;
-#endif
-
-#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
+#endif /* _WIN32 */
 }
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 
 bool BLT_lang_is_im_supported(void)
 {
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	return im_is_lang_supported;
+#else
+	return false;
+#endif
 }
