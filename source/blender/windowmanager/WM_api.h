@@ -106,8 +106,11 @@ struct wmWindow *WM_window_open_temp(struct bContext *C, int x, int y, int sizex
 void             WM_window_set_dpi(wmWindow *win);
 			
 			/* input method */
+#ifdef WITH_IM_OVERTHESPOT
+bool		WM_window_IM_is_spot_needed(wmWindow *win);
+#endif
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-bool		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
+void		WM_window_IM_spot_set	(wmWindow *win, int x, int y, bool force);
 void		WM_window_IM_begin	(wmWindow *win, bool modal);
 void		WM_window_IM_end	(wmWindow *win, bool modal);
 #endif
