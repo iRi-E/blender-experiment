@@ -1474,7 +1474,7 @@ static bool view3d_im_begin(const bContext *C, ARegion *ar)
 
 	if (obedit && obedit->type == OB_FONT) {
 		WM_window_IM_begin(win, false);
-		UI_region_im_spot_set(win, ar, 0, 0, false);
+		UI_region_im_spot_set(win, ar, 0, 0, 0, false);
 		return true;
 	}
 

@@ -717,7 +717,7 @@ bool GHOST_WindowX11::isIMSpotNeeded()
 	return (m_xim_spot_x == -1);
 }
 
-void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force)
+void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force)
 {
 	if (!force && m_xim_modal)
 		return;

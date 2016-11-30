@@ -928,7 +928,11 @@ extern int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle);
  * true:  Set location unconditionally
  * false: Do nothing when doing modal input
  */
-extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force);
+extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle,
+                            GHOST_TInt32 x,
+                            GHOST_TInt32 y,
+                            GHOST_TInt32 h,
+                            int force);
 
 /**
  * Enable input method attached to the given window, i.e. allows user-input

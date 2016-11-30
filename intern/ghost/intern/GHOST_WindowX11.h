@@ -215,7 +215,7 @@ public:
 
 	/* public API */
 	bool isIMSpotNeeded();
-	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force);
+	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force);
 	void beginIM(int modal);
 	void endIM(int modal);
 #endif

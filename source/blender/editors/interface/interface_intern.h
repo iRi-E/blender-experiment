@@ -676,7 +676,7 @@ uiBut *ui_but_find_old(uiBlock *block_old, const uiBut *but_new);
 uiBut *ui_but_find_new(uiBlock *block_old, const uiBut *but_new);
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void ui_but_im_spot_set(uiBut *but, int x, int y);
+void ui_but_im_spot_set(uiBut *but, int x, int y, int h);
 #endif
 #ifdef WITH_IM_ONTHESPOT
 struct wmIMData *ui_but_im_data_get(uiBut *but);

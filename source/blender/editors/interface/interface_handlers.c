@@ -2990,17 +2990,17 @@ static bool ui_textedit_copypaste(uiBut *but, uiHandleButtonData *data, const in
 }
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void UI_region_im_spot_set(wmWindow *win, ARegion *ar, int x, int y, bool force)
+void UI_region_im_spot_set(wmWindow *win, ARegion *ar, int x, int y, int h, bool force)
 {
 	ui_region_to_window(ar, &x, &y);
-	WM_window_IM_spot_set(win, x, y, force);
+	WM_window_IM_spot_set(win, x, y, h, force);
 }
 
-void ui_but_im_spot_set(uiBut *but, int x, int y)
+void ui_but_im_spot_set(uiBut *but, int x, int y, int h)
 {
 	BLI_assert(but->active);
 
-	UI_region_im_spot_set(but->active->window, but->active->region, x, y, true);
+	UI_region_im_spot_set(but->active->window, but->active->region, x, y, h, true);
 }
 #endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 

@@ -923,10 +923,14 @@ int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle)
 #endif
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, int force)
+void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle,
+		     GHOST_TInt32 x,
+		     GHOST_TInt32 y,
+		     GHOST_TInt32 h,
+		     int force)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->setIMSpot(x, y, force);
+	window->setIMSpot(x, y, h, force);
 }
 
 void GHOST_BeginIM(GHOST_WindowHandle windowhandle, int modal)

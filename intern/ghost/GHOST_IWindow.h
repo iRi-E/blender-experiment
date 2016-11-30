@@ -354,7 +354,7 @@ public:
          * true:  Set location unconditionally
          * false: Do nothing when doing modal input
          */
-	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, int force) = 0;
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force) = 0;
 
 	/**
          * Enable input method attached to the given window, i.e. allows user-input

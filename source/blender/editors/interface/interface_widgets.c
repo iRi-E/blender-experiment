@@ -1402,7 +1402,7 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 			/* over-the-spot style input needs coordinates of composition window every time
 			 * the cursor is drawn, because preedit text is drawn in the composition window
 			 * and there is no way to know if the preedit is empty or not. */
-			ui_but_im_spot_set(but, tx, ty);
+			ui_but_im_spot_set(but, tx, ty, rect->ymax - 2 - ty);
 #endif
 		}
 
@@ -1410,7 +1410,7 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 		if (im_data && im_data->composite_len) {
 			/* IM cursor following */
 			if (but->pos >= but->ofs) {
-				ui_but_im_spot_set(but, tx, ty);
+				ui_but_im_spot_set(but, tx, ty, rect->ymax - 2 - ty);
 			}
 
 			/* composite underline */
