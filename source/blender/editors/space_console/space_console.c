@@ -249,7 +249,7 @@ static void console_main_region_draw(const bContext *C, ARegion *ar)
 
 #ifdef WITH_IM_OVERTHESPOT
 	if ((cursor_xy[0] != -1) && (CTX_wm_screen(C)->subwinactive == ar->swinid)) {
-		UI_region_im_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1], sc->lheight, false);
+		UI_region_im_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1], sc->lheight);
 	}
 #endif
 }

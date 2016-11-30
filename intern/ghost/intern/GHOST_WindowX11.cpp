@@ -342,7 +342,6 @@ GHOST_WindowX11(GHOST_SystemX11 *system,
       m_xic(NULL),
       m_focused(false),
       m_xim_needed(false),
-      m_xim_modal(false),
       m_xim_spot_x(-1),
       m_xim_spot_y(-1),
 #endif
@@ -717,9 +716,9 @@ bool GHOST_WindowX11::isIMSpotNeeded()
 	return (m_xim_spot_x == -1);
 }
 
-void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force)
+void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 /* h */)
 {
-	if (!force && m_xim_modal)
+	if (m_im_modal)
 		return;
 
 	if (!m_xic || (m_xim_style & XIMPreeditNothing))
@@ -744,9 +743,9 @@ void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, 
 	m_xim_spot_y = y;
 }
 
-void GHOST_WindowX11::beginIM(int modal)
+void GHOST_WindowX11::beginIM()
 {
-	if (!modal && m_xim_modal)
+	if (m_im_modal)
 		return;
 
 	if (m_xic && m_focused && !m_xim_needed) {
@@ -754,19 +753,17 @@ void GHOST_WindowX11::beginIM(int modal)
 		m_xim_spot_x = m_xim_spot_y = -1;
 	}
 	m_xim_needed = true;
-	m_xim_modal = modal;
 }
 
-void GHOST_WindowX11::endIM(int modal)
+void GHOST_WindowX11::endIM()
 {
-	if (!modal && m_xim_modal)
+	if (m_im_modal)
 		return;
 
 	if (m_xic && m_focused && m_xim_needed) {
 		unsetICFocus(m_xic);
 	}
 	m_xim_needed = false;
-	m_xim_modal = false;
 }
 #endif /* defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING) */
 

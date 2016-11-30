@@ -511,7 +511,7 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 	 * (e.g. change space type in active region, change screen, toggle fullscreen, etc.) */
 	if (CTX_wm_screen(C)->subwinactive == ar->swinid) {
 		if (!(at->im_begin && at->im_begin(C, ar)))
-			WM_window_IM_end(win, false);
+			WM_window_IM_end(win);
 	}
 #endif
 	
@@ -559,7 +559,7 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 #ifdef WITH_IM_OVERTHESPOT
 bool ED_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
 {
-	WM_window_IM_begin(CTX_wm_window(C), false);
+	WM_window_IM_begin(CTX_wm_window(C));
 
 	return true;
 }
