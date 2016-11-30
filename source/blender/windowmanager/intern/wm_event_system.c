@@ -2411,9 +2411,13 @@ void wm_event_do_handlers(bContext *C)
 
 #ifdef WITH_IM_OVERTHESPOT
 			if (event->type == WM_IM_COMPOSITE_EVENT) {
+				/* if spot location is not set yet, redraw active region to calculate it.
+				 * normally, redrawing is triggered by first key stroke after changing active region.
+				 * note: on-the-spot style doesn't need this redraw because updating preedit text
+				 * causes redraw so the spot location is always set. */
 				if (WM_window_IM_is_spot_needed(win))
-					/* if spot location is not set yet, redraw region to calculate it */
 					ED_region_tag_redraw(CTX_wm_region(C));
+
 				BLI_remlink(&win->queue, event);
 				wm_event_free(event);
 				continue;

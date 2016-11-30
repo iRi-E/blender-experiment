@@ -1399,9 +1399,9 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 			glRecti(rect->xmin + t, ty, tx, rect->ymax - 2);
 
 #ifdef WITH_IM_OVERTHESPOT
-			/* over-the-spot style input needs coordinates every time the cursor is drawn,
-			 * because there is no way to know if the preedit is empty or not.
-			 */
+			/* over-the-spot style input needs coordinates of composition window every time
+			 * the cursor is drawn, because preedit text is drawn in the composition window
+			 * and there is no way to know if the preedit is empty or not. */
 			ui_but_im_spot_set(but, tx, ty);
 #endif
 		}
