@@ -215,9 +215,9 @@ public:
 
 	/* public API */
 	bool isIMSpotNeeded();
-	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force);
-	void beginIM(int modal);
-	void endIM(int modal);
+	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h);
+	void beginIM();
+	void endIM();
 #endif
 
 #ifdef WITH_X11_XINPUT
@@ -366,7 +366,6 @@ private:
 	XIC m_xic;
 	bool m_focused;
 	bool m_xim_needed;
-	bool m_xim_modal;
 	GHOST_TInt32 m_xim_spot_x;
 	GHOST_TInt32 m_xim_spot_y;
 #endif

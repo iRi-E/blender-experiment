@@ -1094,7 +1094,7 @@ int UI_calc_float_precision(int prec, double value);
 
 /* Input method */
 #ifdef WITH_IM_OVERTHESPOT
-void UI_region_im_spot_set(struct wmWindow *win, struct ARegion *ar, int x, int y, int h, bool force);
+void UI_region_im_spot_set(struct wmWindow *win, struct ARegion *ar, int x, int y, int h);
 #endif
 
 #endif  /* __UI_INTERFACE_H__ */

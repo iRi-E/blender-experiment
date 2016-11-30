@@ -299,9 +299,19 @@ public:
 	virtual bool isIMSpotNeeded() = 0;
 #endif
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force) = 0;
-	virtual void beginIM(int modal) = 0;
-	virtual void endIM(int modal) = 0;
+	void setIMModal()
+	{
+		m_im_modal = true;
+	}
+
+	void unsetIMModal()
+	{
+		m_im_modal = false;
+	}
+
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h) = 0;
+	virtual void beginIM() = 0;
+	virtual void endIM() = 0;
 #endif
 
 protected:
@@ -394,6 +404,10 @@ protected:
 	
 	/* OSX only, retina screens */
 	float m_nativePixelSize;
+
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	bool m_im_modal;
+#endif
 
 private:
 	GHOST_Context *m_context;

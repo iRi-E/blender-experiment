@@ -923,25 +923,33 @@ int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle)
 #endif
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle,
-		     GHOST_TInt32 x,
-		     GHOST_TInt32 y,
-		     GHOST_TInt32 h,
-		     int force)
+void GHOST_SetIMModal(GHOST_WindowHandle windowhandle)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->setIMSpot(x, y, h, force);
+	window->setIMModal();
 }
 
-void GHOST_BeginIM(GHOST_WindowHandle windowhandle, int modal)
+void GHOST_UnsetIMModal(GHOST_WindowHandle windowhandle)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->beginIM(modal);
+	window->unsetIMModal();
 }
 
-void GHOST_EndIM(GHOST_WindowHandle windowhandle, int modal)
+void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->endIM(modal);
+	window->setIMSpot(x, y, h);
+}
+
+void GHOST_BeginIM(GHOST_WindowHandle windowhandle)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->beginIM();
+}
+
+void GHOST_EndIM(GHOST_WindowHandle windowhandle)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->endIM();
 }
 #endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */

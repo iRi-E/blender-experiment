@@ -1726,17 +1726,37 @@ bool WM_window_IM_is_spot_needed(wmWindow *win)
 #endif
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void WM_window_IM_spot_set(wmWindow *win, int x, int y, int h, bool force)
+void WM_window_IM_modal_set(wmWindow *win)
 {
 	if (!BLT_lang_is_im_supported())
 		return;
 
 	BLI_assert(win);
 
-	GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, h, force);
+	GHOST_SetIMModal(win->ghostwin);
 }
 
-void WM_window_IM_begin(wmWindow *win, bool modal)
+void WM_window_IM_modal_unset(wmWindow *win)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+
+	GHOST_UnsetIMModal(win->ghostwin);
+}
+
+void WM_window_IM_spot_set(wmWindow *win, int x, int y, int h)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+
+	GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, h);
+}
+
+void WM_window_IM_begin(wmWindow *win)
 {
 	if (!BLT_lang_is_im_supported())
 		return;
@@ -1746,10 +1766,10 @@ void WM_window_IM_begin(wmWindow *win, bool modal)
 	BLI_assert(win->im_data == NULL);
 #endif
 
-	GHOST_BeginIM(win->ghostwin, modal);
+	GHOST_BeginIM(win->ghostwin);
 }
 
-void WM_window_IM_end(wmWindow *win, bool modal)
+void WM_window_IM_end(wmWindow *win)
 {
 	if (!BLT_lang_is_im_supported())
 		return;
@@ -1760,7 +1780,7 @@ void WM_window_IM_end(wmWindow *win, bool modal)
 	if (win->im_data)
 #endif
 	{
-		GHOST_EndIM(win->ghostwin, modal);
+		GHOST_EndIM(win->ghostwin);
 #ifdef WITH_IM_ONTHESPOT
 		win->im_data = NULL;
 #endif

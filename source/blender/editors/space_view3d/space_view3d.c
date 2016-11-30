@@ -1473,8 +1473,8 @@ static bool view3d_im_begin(const bContext *C, ARegion *ar)
 	Object *obedit = CTX_data_edit_object(C);
 
 	if (obedit && obedit->type == OB_FONT) {
-		WM_window_IM_begin(win, false);
-		UI_region_im_spot_set(win, ar, 0, 0, 0, false);
+		WM_window_IM_begin(win);
+		UI_region_im_spot_set(win, ar, 0, 0, 0);
 		return true;
 	}
 

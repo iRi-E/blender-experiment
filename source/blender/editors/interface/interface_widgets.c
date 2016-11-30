@@ -1402,7 +1402,9 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 			/* over-the-spot style input needs coordinates of composition window every time
 			 * the cursor is drawn, because preedit text is drawn in the composition window
 			 * and there is no way to know if the preedit is empty or not. */
-			ui_but_im_spot_set(but, tx, ty, rect->ymax - 2 - ty);
+			/* XXX python3 allows non-ascii variable name. is this if() really needed...? */
+			if (!ELEM(but->type, UI_BTYPE_NUM, UI_BTYPE_NUM_SLIDER))
+				ui_but_im_spot_set(but, tx, ty, rect->ymax - 2 - ty);
 #endif
 		}
 

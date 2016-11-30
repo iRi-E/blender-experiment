@@ -345,35 +345,37 @@ public:
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
 	/**
+         * Start modal input. After this function call, beginIM(), endIM(),
+         * and setIMSpot() do nothing until calling unsetIMModal().
+         */
+	virtual void setIMModal() = 0;
+
+	/**
+         * End modal input. After this function call, beginIM(), endIM(),
+         * and setIMSpot() works normally.
+         */
+	virtual void unsetIMModal() = 0;
+
+	/**
          * Set spot location of input method, used for placing composition window.
          * This takes effect when the input method server supports over-the-spot or
          * on-the-spot input style.
          * \param x Requested x-coordinate that the preedit window will be placed
          * \param y Requested y-coordinate that the preedit window will be placed
-         * \param force Whether or not to set location when doing modal input
-         * true:  Set location unconditionally
-         * false: Do nothing when doing modal input
          */
-	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h, int force) = 0;
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h) = 0;
 
 	/**
          * Enable input method attached to the given window, i.e. allows user-input
          * events to be dispatched to the input method server.
-         * \param modal Whether or not to start modal input
-         * true:  Start modal input via input method
-         * false: Activate input method
          */
-	virtual void beginIM(int modal) = 0;
+	virtual void beginIM() = 0;
 
 	/**
          * Disable the input method attached to the given window, i.e. prohibits any
          * user-input events from being dispatched to the input method server.
-         * Do nothing if modal is false and already modal.
-         * \param modal Whether or not to stop modal input
-         * true:  Stop modal input
-         * false: Deactivate input method but do nothing if already in modal input
          */
-	virtual void endIM(int modal) = 0;
+	virtual void endIM() = 0;
 #endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 	
 #ifdef WITH_CXX_GUARDEDALLOC

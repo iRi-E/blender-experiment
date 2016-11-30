@@ -2990,17 +2990,22 @@ static bool ui_textedit_copypaste(uiBut *but, uiHandleButtonData *data, const in
 }
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-void UI_region_im_spot_set(wmWindow *win, ARegion *ar, int x, int y, int h, bool force)
+void UI_region_im_spot_set(wmWindow *win, ARegion *ar, int x, int y, int h)
 {
 	ui_region_to_window(ar, &x, &y);
-	WM_window_IM_spot_set(win, x, y, h, force);
+	WM_window_IM_spot_set(win, x, y, h);
 }
 
 void ui_but_im_spot_set(uiBut *but, int x, int y, int h)
 {
 	BLI_assert(but->active);
 
-	UI_region_im_spot_set(but->active->window, but->active->region, x, y, h, true);
+	wmWindow *win = but->active->window;
+
+	/* unset modal temporarily in order to force spot location to set */
+	WM_window_IM_modal_unset(win);
+	UI_region_im_spot_set(win, but->active->region, x, y, h);
+	WM_window_IM_modal_set(win);
 }
 #endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 
@@ -3096,8 +3101,13 @@ static void ui_textedit_begin(bContext *C, uiBut *but, uiHandleButtonData *data)
 	WM_cursor_modal_set(win, BC_TEXTEDITCURSOR);
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	/* XXX python3 allows non-ascii variable name. is this if() really needed...? */
 	if (is_num_but == false)
-		WM_window_IM_begin(win, true);
+		WM_window_IM_begin(win);
+	else
+		WM_window_IM_end(win);
+
+	WM_window_IM_modal_set(win);
 #endif
 }
 
@@ -3138,7 +3148,8 @@ static void ui_textedit_end(bContext *C, uiBut *but, uiHandleButtonData *data)
 	WM_cursor_modal_restore(win);
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
-	WM_window_IM_end(win, true);
+	WM_window_IM_modal_unset(win);
+	WM_window_IM_end(win);
 #endif
 }
 

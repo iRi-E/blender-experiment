@@ -918,42 +918,42 @@ extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
 extern int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle);
 
 /**
+ * Start modal input. After this function call, GHOST_BeginIM(), GHOST_EndIM(),
+ * and GHOST_SetIMSpot() do nothing until calling GHOST_UnsetIMModal().
+ * \param windowhandle Window handle of the caller
+ */
+extern void GHOST_SetIMModal(GHOST_WindowHandle windowhandle);
+
+/**
+ * End modal input. After this function call, GHOST_BeginIM(), GHOST_EndIM(),
+ * and GHOST_SetIMSpot() works normally.
+ * \param windowhandle Window handle of the caller
+ */
+extern void GHOST_UnsetIMModal(GHOST_WindowHandle windowhandle);
+
+/**
  * Set spot location of input method, used for placing composition window.
  * This takes effect when the input method server supports over-the-spot or
  * on-the-spot input style.
  * \param windowhandle Window handle of the caller
  * \param x Requested x-coordinate that the preedit window will be placed
  * \param y Requested y-coordinate that the preedit window will be placed
- * \param force Whether or not to set location when doing modal input
- * true:  Set location unconditionally
- * false: Do nothing when doing modal input
  */
-extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle,
-                            GHOST_TInt32 x,
-                            GHOST_TInt32 y,
-                            GHOST_TInt32 h,
-                            int force);
+extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h);
 
 /**
  * Enable input method attached to the given window, i.e. allows user-input
  * events to be dispatched to the input method server.
  * \param windowhandle Window handle of the caller
- * \param modal Whether or not to start modal input
- * true:  Start modal input via input method
- * false: Activate input method
  */
-extern void GHOST_BeginIM(GHOST_WindowHandle windowhandle, int modal);
+extern void GHOST_BeginIM(GHOST_WindowHandle windowhandle);
 
 /**
  * Disable the input method attached to the given window, i.e. prohibits any
  * user-input events from being dispatched to the input method server.
- * Do nothing if modal is false and already modal.
  * \param windowhandle The window handle of the caller
- * \param modal Whether or not to stop modal input
- * true:  Stop modal input
- * false: Deactivate input method but do nothing if already in modal input
  */
-extern void GHOST_EndIM(GHOST_WindowHandle windowhandle, int modal);
+extern void GHOST_EndIM(GHOST_WindowHandle windowhandle);
 
 #ifdef __cplusplus
 }

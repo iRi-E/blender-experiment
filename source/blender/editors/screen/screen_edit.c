@@ -1421,7 +1421,7 @@ void ED_screen_set_subwinactive(bContext *C, wmEvent *event)
 					scr->subwinactive = ar->swinid;
 #ifdef WITH_IM_OVERTHESPOT
 					if (oldswin != scr->subwinactive) {
-						WM_window_IM_end(win, false);
+						WM_window_IM_end(win);
 						if (ar->type && ar->type->im_begin)
 							ar->type->im_begin(C, ar);
 					}
