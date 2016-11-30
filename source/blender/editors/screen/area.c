@@ -507,6 +507,8 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 	UI_SetTheme(sa ? sa->spacetype : 0, at->regionid);
 
 #ifdef WITH_IM_OVERTHESPOT
+	/* input method might need to be activate/deactivate for unusual reason
+	 * (e.g. change space type in active region, change screen, toggle fullscreen, etc.) */
 	if (CTX_wm_screen(C)->subwinactive == ar->swinid) {
 		if (!(at->im_begin && at->im_begin(C, ar)))
 			WM_window_IM_end(win, false);
