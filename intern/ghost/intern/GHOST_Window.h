@@ -406,6 +406,7 @@ protected:
 	float m_nativePixelSize;
 
 #if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	/** Whether modal input is ongoing with input method */
 	bool m_im_modal;
 #endif
 
