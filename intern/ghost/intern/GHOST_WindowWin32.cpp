@@ -1086,6 +1086,7 @@ void GHOST_WindowWin32::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h
 	if (m_im_modal)
 		return;
 
+	/* adjust location of composition window */
 	x += 5;
 	y -= 1;
 
@@ -1097,6 +1098,7 @@ void GHOST_WindowWin32::beginIM()
 	if (m_im_modal)
 		return;
 
+	/* coordinate -1 means don't set location */
 	m_imeImput.BeginIME(m_hWnd, GHOST_Rect(-1, -1, 0, 0), true);
 }
 
