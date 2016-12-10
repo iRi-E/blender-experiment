@@ -32,6 +32,7 @@ extern "C" {
 #include "COM_NodeOperation.h"
 
 #include "COM_AlphaOverNode.h"
+#include "COM_AntiAliasingNode.h"
 #include "COM_BilateralBlurNode.h"
 #include "COM_BlurNode.h"
 #include "COM_BokehBlurNode.h"
@@ -405,6 +406,9 @@ Node *Converter::convert(bNode *b_node)
 			break;
 		case CMP_NODE_SUNBEAMS:
 			node = new SunBeamsNode(b_node);
+			break;
+		case CMP_NODE_ANTIALIASING:
+			node = new AntiAliasingNode(b_node);
 			break;
 	}
 	return node;
