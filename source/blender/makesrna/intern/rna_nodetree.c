@@ -6750,6 +6750,99 @@ static void def_cmp_sunbeams(StructRNA *srna)
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 }
 
+static void def_cmp_antialiasing(StructRNA *srna)
+{
+	PropertyRNA *prop;
+
+	static EnumPropertyItem edge_detection_type_items[] = {
+		{CMP_NODE_ANTIALIASING_LUMA,  "LUMA",  0, "Luma", ""},
+		{CMP_NODE_ANTIALIASING_COLOR, "COLOR", 0, "Color", ""},
+		{CMP_NODE_ANTIALIASING_DEPTH, "DEPTH", 0, "Depth", ""},
+		{0, NULL, 0, NULL, NULL}
+	};
+
+	RNA_def_struct_sdna_from(srna, "NodeAntiAliasingData", "storage");
+
+	prop = RNA_def_property(srna, "edge_detection_type", PROP_ENUM, PROP_NONE);
+	RNA_def_property_enum_sdna(prop, NULL, "detect_type");
+	RNA_def_property_enum_items(prop, edge_detection_type_items);
+	RNA_def_property_ui_text(prop, "Edge Detection Type", "");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "threshold", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "thresh");
+	RNA_def_property_range(prop, 0.0f, 0.5f);
+	RNA_def_property_ui_range(prop, 0.0f, 0.5f, 1.0, 3);
+	RNA_def_property_ui_text(prop, "Threshold", "Threshold or sensitivity to detect edges");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "local_contrast_adaption_factor", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "adapt_fac");
+	RNA_def_property_range(prop, 0.0f, 100.0f);
+	RNA_def_property_ui_range(prop, 0.0f, 10.0f, 1.0, 3);
+	RNA_def_property_ui_text(prop, "Local Contrast Adaption Factor", "How big a crossing edge breaking current edge has contrast");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "enable_predication", PROP_BOOLEAN, PROP_NONE);
+	RNA_def_property_boolean_sdna(prop, NULL, "pred", 1);
+	RNA_def_property_ui_text(prop, "Predication", "Enable predicated thresholding that preserves more texture details and improves performance");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "predication_threshold", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "pred_thresh");
+	RNA_def_property_ui_range(prop, 0.0f, 100.0f, 1.0, 3);
+	RNA_def_property_ui_text(prop, "Threshold", "Threshold used in the additional predication buffer (needs to adjust the value depending on the input)");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "predication_scale", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "pred_scale");
+	RNA_def_property_range(prop, 1.0f, 5.0f);
+	RNA_def_property_ui_range(prop, 1.0f, 5.0f, 1.0, 3);
+	RNA_def_property_ui_text(prop, "Scale", "How much to scale the global predicated threshold used for luma or color edge detection");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "predication_strength", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "pred_str");
+	RNA_def_property_range(prop, 0.0f, 1.0f);
+	RNA_def_property_ui_range(prop, 0.0f, 1.0f, 1.0, 3);
+	RNA_def_property_ui_text(prop, "Strength", "How much to locally decrease the predicated threshold");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "depth_threshold", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "dept_thresh");
+	RNA_def_property_ui_range(prop, 0.0f, 100.0f, 1.0, 3);
+	RNA_def_property_ui_text(prop, "Threshold", "Threshold for depth edge detection (needs to adjust the value depending on the depth range of the scene)");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "max_search_steps", PROP_INT, PROP_UNSIGNED);
+	RNA_def_property_int_sdna(prop, NULL, "search_steps");
+	RNA_def_property_range(prop, 0, 112);
+	RNA_def_property_ui_text(prop, "Search Steps", "Maximum steps performed in the horizontal/vertical pattern searches, at each side of the pixel");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "enable_diag_detection", PROP_BOOLEAN, PROP_NONE);
+	RNA_def_property_boolean_sdna(prop, NULL, "diag", 1);
+	RNA_def_property_ui_text(prop, "Diagonal Detection", "Perform diagonal pattern searches");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "max_search_steps_diag", PROP_INT, PROP_UNSIGNED);
+	RNA_def_property_int_sdna(prop, NULL, "search_steps_diag");
+	RNA_def_property_range(prop, 0, 20);
+	RNA_def_property_ui_text(prop, "Search Steps", "Maximum steps performed in the diagonal pattern searches, at each side of the pixel");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+	prop = RNA_def_property(srna, "enable_corner_detection", PROP_BOOLEAN, PROP_NONE);
+	RNA_def_property_boolean_sdna(prop, NULL, "corner", 1);
+	RNA_def_property_ui_text(prop, "Corner Detection", "Avoid the sharp corners will be rounded");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+
+prop = RNA_def_property(srna, "corner_rounding", PROP_INT, PROP_UNSIGNED);
+	RNA_def_property_int_sdna(prop, NULL, "rounding");
+	RNA_def_property_range(prop, 0, 100);
+	RNA_def_property_ui_text(prop, "Corner Rounding", "How much sharp corners will be rounded");
+	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
+}
+
 /* -- Texture Nodes --------------------------------------------------------- */
 
 static void def_tex_output(StructRNA *srna)

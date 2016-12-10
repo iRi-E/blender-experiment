@@ -1449,6 +1449,42 @@ static void node_composit_buts_defocus(uiLayout *layout, bContext *C, PointerRNA
 	uiItemR(sub, ptr, "z_scale", 0, NULL, ICON_NONE);
 }
 
+static void node_composit_buts_antialiasing(uiLayout *layout, bContext *UNUSED(C), PointerRNA *ptr)
+{
+	uiLayout *col, *sub;
+
+	col = uiLayoutColumn(layout, false);
+	uiItemL(col, IFACE_("Edge Detection:"), ICON_NONE);
+	uiItemR(col, ptr, "edge_detection_type", 0, "", ICON_NONE);
+
+	if (RNA_enum_get(ptr, "edge_detection_type") != CMP_NODE_ANTIALIASING_DEPTH) {
+		uiItemR(col, ptr, "threshold", 0, NULL, ICON_NONE);
+		uiItemR(col, ptr, "local_contrast_adaption_factor", 0, NULL, ICON_NONE);
+
+		uiItemR(col, ptr, "enable_predication", 0, NULL, ICON_NONE);
+		sub = uiLayoutColumn(col, false);
+		uiLayoutSetActive(sub, RNA_boolean_get(ptr, "enable_predication"));
+		uiItemR(sub, ptr, "predication_threshold", 0, NULL, ICON_NONE);
+		uiItemR(sub, ptr, "predication_scale", 0, NULL, ICON_NONE);
+		uiItemR(sub, ptr, "predication_strength", 0, NULL, ICON_NONE);
+	} else {
+		uiItemR(col, ptr, "depth_threshold", 0, NULL, ICON_NONE);
+	}
+
+	uiItemL(col, IFACE_("Weight Calculation:"), ICON_NONE);
+	uiItemR(col, ptr, "max_search_steps", 0, NULL, ICON_NONE);
+
+	uiItemR(col, ptr, "enable_diag_detection", 0, NULL, ICON_NONE);
+	sub = uiLayoutColumn(col, false);
+	uiLayoutSetActive(sub, RNA_boolean_get(ptr, "enable_diag_detection"));
+	uiItemR(sub, ptr, "max_search_steps_diag", 0, NULL, ICON_NONE);
+
+	uiItemR(col, ptr, "enable_corner_detection", 0, NULL, ICON_NONE);
+	sub = uiLayoutColumn(col, false);
+	uiLayoutSetActive(sub, RNA_boolean_get(ptr, "enable_corner_detection"));
+	uiItemR(sub, ptr, "corner_rounding", 0, NULL, ICON_NONE);
+}
+
 /* qdn: glare node */
 static void node_composit_buts_glare(uiLayout *layout, bContext *UNUSED(C), PointerRNA *ptr)
 {	
@@ -2541,6 +2577,9 @@ static void node_composit_set_butfunc(bNodeType *ntype)
 			break;
 		case CMP_NODE_DEFOCUS:
 			ntype->draw_buttons = node_composit_buts_defocus;
+			break;
+		case CMP_NODE_ANTIALIASING:
+			ntype->draw_buttons = node_composit_buts_antialiasing;
 			break;
 		case CMP_NODE_GLARE:
 			ntype->draw_buttons = node_composit_buts_glare;

@@ -595,6 +595,13 @@ typedef struct NodeBilateralBlurData {
 	short iter, pad;
 } NodeBilateralBlurData;
 
+typedef struct NodeAntiAliasingData {
+	char detect_type, pred, diag, corner;
+	float thresh, dept_thresh, adapt_fac;
+	float pred_thresh, pred_scale, pred_str;
+	int search_steps, search_steps_diag, rounding;
+} NodeAntiAliasingData;
+
 /* NOTE: Only for do-version code. */
 typedef struct NodeHueSat {
 	float hue, sat, val;
@@ -1154,6 +1161,13 @@ enum {
 	SHD_POINTDENSITY_COLOR_VERTCOL      = 0,
 	SHD_POINTDENSITY_COLOR_VERTWEIGHT   = 1,
 	SHD_POINTDENSITY_COLOR_VERTNOR      = 2,
+};
+
+/* Anti-Aliasing Node */
+enum {
+	CMP_NODE_ANTIALIASING_LUMA  = 0,
+	CMP_NODE_ANTIALIASING_COLOR = 1,
+	CMP_NODE_ANTIALIASING_DEPTH = 2,
 };
 
 #endif
