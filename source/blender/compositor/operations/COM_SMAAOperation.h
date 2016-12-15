@@ -23,7 +23,7 @@
 #include "COM_NodeOperation.h"
 
 /*-----------------------------------------------------------------------------*/
-/* Edge Detection Pixel Shaders (First Pass) */
+/* Edge Detection (First Pass) */
 
 class SMAAEdgeDetectionOperation : public NodeOperation {
 protected:
@@ -73,7 +73,7 @@ public:
 };
 
 /*-----------------------------------------------------------------------------*/
-/*  Blending Weight Calculation Pixel Shader (Second Pass) */
+/*  Blending Weight Calculation (Second Pass) */
 
 class SMAABlendingWeightCalculationOperation : public NodeOperation {
 private:
@@ -121,7 +121,7 @@ private:
 };
 
 /*-----------------------------------------------------------------------------*/
-/* Neighborhood Blending Pixel Shader (Third Pass) */
+/* Neighborhood Blending (Third Pass) */
 
 class SMAANeighborhoodBlendingOperation : public NodeOperation {
 private:

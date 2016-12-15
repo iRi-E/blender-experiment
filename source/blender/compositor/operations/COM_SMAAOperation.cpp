@@ -334,7 +334,7 @@ bool SMAADepthEdgeDetectionOperation::determineDependingAreaOfInterest(rcti *inp
 }
 
 /*-----------------------------------------------------------------------------*/
-/* Blending Weight Calculation Pixel Shader (Second Pass) */
+/* Blending Weight Calculation (Second Pass) */
 /*-----------------------------------------------------------------------------*/
 
 SMAABlendingWeightCalculationOperation::SMAABlendingWeightCalculationOperation() : NodeOperation()
@@ -778,7 +778,7 @@ void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float w
 }
 
 /*-----------------------------------------------------------------------------*/
-/* Neighborhood Blending Pixel Shader (Third Pass) */
+/* Neighborhood Blending (Third Pass) */
 /*-----------------------------------------------------------------------------*/
 
 SMAANeighborhoodBlendingOperation::SMAANeighborhoodBlendingOperation() : NodeOperation()
