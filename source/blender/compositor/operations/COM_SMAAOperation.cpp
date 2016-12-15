@@ -47,44 +47,16 @@
 #define SMAA_AREATEX_MAX_DISTANCE_DIAG 20
 
 /*-----------------------------------------------------------------------------*/
-/* Miscellaneous Utility Functions */
-
-static float step(float edge, float x)
-{
-	return x < edge ? 0.0 : 1.0;
-}
-
-static float saturate(float x)
-{
-	return 0.0 < x ? (x < 1.0 ? x : 1.0) : 0.0;
-}
-
-static int clamp(int x, int range)
-{
-	return 0 < x ? (x < range ? x : range - 1) : 0;
-}
-
-static float lerp(float a, float b, float p)
-{
-	return a + (b - a) * p;
-}
-
-static float bilinear(float c00, float c10, float c01, float c11, float x, float y)
-{
-	return (c00 * (1.0 - x) + c10 * x) * (1.0 - y) + (c01 * (1.0 - x) + c11 * x) * y;
-}
-
-static float rgb2bw(float color[3])
-{
-	return (color[0] * 0.2126 + color[1] * 0.7152 + color[2] * 0.0722);
-}
-
-/*-----------------------------------------------------------------------------*/
 /* Internal Functions to Sample Pixel Color */
+
+static int clamp_index(int x, int range)
+{
+	return CLAMPIS(x, 0, range - 1);
+}
 
 static void sample(SocketReader *reader, int x, int y, float color[4])
 {
-	reader->read(color, clamp(x, reader->getWidth()), clamp(y, reader->getHeight()), NULL);
+	reader->read(color, clamp_index(x, reader->getWidth()), clamp_index(y, reader->getHeight()), NULL);
 }
 
 static void sample_level_zero_yoffset(SocketReader *reader, int x, int y, float yoffset, float color[4])
@@ -98,10 +70,10 @@ static void sample_level_zero_yoffset(SocketReader *reader, int x, int y, float 
 	sample(reader, x + 0, y + 0, color00);
 	sample(reader, x + 0, y + 1, color01);
 
-	color[0] = lerp(color00[0], color01[0], fy);
-	color[1] = lerp(color00[1], color01[1], fy);
-	color[2] = lerp(color00[2], color01[2], fy);
-	color[3] = lerp(color00[3], color01[3], fy);
+	color[0] = interpf(color01[0], color00[0], fy);
+	color[1] = interpf(color01[1], color00[1], fy);
+	color[2] = interpf(color01[2], color00[2], fy);
+	color[3] = interpf(color01[3], color00[3], fy);
 }
 
 static void sample_level_zero_xoffset(SocketReader *reader, int x, int y, float xoffset, float color[4])
@@ -115,15 +87,15 @@ static void sample_level_zero_xoffset(SocketReader *reader, int x, int y, float 
 	sample(reader, x + 0, y + 0, color00);
 	sample(reader, x + 1, y + 0, color10);
 
-	color[0] = lerp(color00[0], color10[0], fx);
-	color[1] = lerp(color00[1], color10[1], fx);
-	color[2] = lerp(color00[2], color10[2], fx);
-	color[3] = lerp(color00[3], color10[3], fx);
+	color[0] = interpf(color10[0], color00[0], fx);
+	color[1] = interpf(color10[1], color00[1], fx);
+	color[2] = interpf(color10[2], color00[2], fx);
+	color[3] = interpf(color10[3], color00[3], fx);
 }
 
 static const float* areatex_sample_internal(const float *areatex, int x, int y)
 {
-	return &areatex[(clamp(x, SMAA_AREATEX_SIZE) + clamp(y, SMAA_AREATEX_SIZE) * SMAA_AREATEX_SIZE) * 2];
+	return &areatex[(clamp_index(x, SMAA_AREATEX_SIZE) + clamp_index(y, SMAA_AREATEX_SIZE) * SMAA_AREATEX_SIZE) * 2];
 }
 
 static void areatex_sample_level_zero(const float *areatex, float x, float y, float weights[2])
@@ -137,8 +109,8 @@ static void areatex_sample_level_zero(const float *areatex, float x, float y, fl
 	const float *weights01 = areatex_sample_internal(areatex, X + 0, Y + 1);
 	const float *weights11 = areatex_sample_internal(areatex, X + 1, Y + 1);
 
-	weights[0] = bilinear(weights00[0], weights10[0], weights01[0], weights11[0], fx, fy);
-	weights[1] = bilinear(weights00[1], weights10[1], weights01[1], weights11[1], fx, fy);
+	weights[0] = interpf(interpf(weights11[0], weights01[0], fx), interpf(weights10[0], weights00[0], fx), fy);
+	weights[1] = interpf(interpf(weights11[1], weights01[1], fx), interpf(weights10[1], weights00[1], fx), fy);
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -190,11 +162,13 @@ void SMAAEdgeDetectionOperation::calculatePredicatedThreshold(int x, int y, floa
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	float edges[2] = {step(m_config.pred_thresh, fabsf(here[0] - left[0])),
-			  step(m_config.pred_thresh, fabsf(here[0] - top[0]))};
-
 	copy_v2_fl(threshold, 1.0);
-	madd_v2_v2fl(threshold, edges, -m_config.pred_str);
+
+	if (fabsf(here[0] - left[0]) >= m_config.pred_thresh)
+		threshold[0] -= m_config.pred_str;
+	if (fabsf(here[0] - top[0]) >= m_config.pred_thresh)
+		threshold[1] -= m_config.pred_str;
+
 	mul_v2_fl(threshold, m_config.pred_scale * m_config.thresh);
 }
 
@@ -208,6 +182,9 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float Lleftleft, Ltoptop, Dleftleft, Dtoptop;
 	float delta_x, delta_y, finalDelta;
 
+	/* RGB weights to convert to luma */
+	float weights[3] = {0.2126, 0.7152, 0.0722};
+
 	/* Calculate the threshold: */
 	if (m_config.pred)
 		calculatePredicatedThreshold(x, y, threshold);
@@ -216,17 +193,17 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate luma deltas: */
 	sample(m_imageReader, x, y, color);
-	L     = rgb2bw(color);
+	L     = dot_v3v3(color, weights);
 	sample(m_imageReader, x - 1, y, color);
-	Lleft = rgb2bw(color);
+	Lleft = dot_v3v3(color, weights);
 	sample(m_imageReader, x, y - 1, color);
-	Ltop  = rgb2bw(color);
+	Ltop  = dot_v3v3(color, weights);
 	Dleft = fabsf(L - Lleft);
 	Dtop  = fabsf(L - Ltop);
 
 	/* We do the usual threshold: */
-	output[0] = step(threshold[0], Dleft);
-	output[1] = step(threshold[1], Dtop);
+	output[0] = (Dleft >= threshold[0]) ? 1.0 : 0.0;
+	output[1] = (Dtop >= threshold[1]) ? 1.0 : 0.0;
 	output[2] = 0.0;
 	output[3] = 1.0;
 
@@ -236,9 +213,9 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate right and bottom deltas: */
 	sample(m_imageReader, x + 1, y, color);
-	Lright  = rgb2bw(color);
+	Lright  = dot_v3v3(color, weights);
 	sample(m_imageReader, x, y + 1, color);
-	Lbottom = rgb2bw(color);
+	Lbottom = dot_v3v3(color, weights);
 	Dright  = fabsf(L - Lright);
 	Dbottom = fabsf(L - Lbottom);
 
@@ -248,9 +225,9 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate left-left and top-top deltas: */
 	sample(m_imageReader, x - 2, y, color);
-	Lleftleft = rgb2bw(color);
+	Lleftleft = dot_v3v3(color, weights);
 	sample(m_imageReader, x, y - 2, color);
-	Ltoptop   = rgb2bw(color);
+	Ltoptop   = dot_v3v3(color, weights);
 	Dleftleft = fabsf(Lleft - Lleftleft);
 	Dtoptop   = fabsf(Ltop - Ltoptop);
 
@@ -260,8 +237,10 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	finalDelta = fmaxf(delta_x, delta_y);
 
 	/* Local contrast adaptation: */
-	output[0] *= step(finalDelta, m_config.adapt_fac * Dleft);
-	output[1] *= step(finalDelta, m_config.adapt_fac * Dtop);
+	if (finalDelta > m_config.adapt_fac * Dleft)
+		output[0] =  0.0;
+	if (finalDelta > m_config.adapt_fac * Dtop)
+		output[1] =  0.0;
 }
 
 /* Color Edge Detection */
@@ -288,8 +267,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	Dtop  = fmaxf(fmaxf(fabsf(C[0] - Ctop[0]), fabsf(C[1] - Ctop[1])), fabsf(C[2] - Ctop[2]));
 
 	/* We do the usual threshold: */
-	output[0] = step(threshold[0], Dleft);
-	output[1] = step(threshold[1], Dtop);
+	output[0] = (Dleft >= threshold[0]) ? 1.0 : 0.0;
+	output[1] = (Dtop >= threshold[1]) ? 1.0 : 0.0;
 	output[2] = 0.0;
 	output[3] = 1.0;
 
@@ -319,8 +298,10 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	finalDelta = fmaxf(delta_x, delta_y);
 
 	/* Local contrast adaptation: */
-	output[0] *= step(finalDelta, m_config.adapt_fac * Dleft);
-	output[1] *= step(finalDelta, m_config.adapt_fac * Dtop);
+	if (finalDelta > m_config.adapt_fac * Dleft)
+		output[0] =  0.0;
+	if (finalDelta > m_config.adapt_fac * Dtop)
+		output[1] =  0.0;
 }
 
 /* Depth Edge Detection */
@@ -333,8 +314,8 @@ void SMAADepthEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	output[0] = step(m_config.dept_thresh, fabsf(here[0] - left[0]));
-	output[1] = step(m_config.dept_thresh, fabsf(here[0] - top[0]));
+	output[0] = (fabsf(here[0] - left[0]) >= m_config.dept_thresh) ? 1.0 : 0.0;
+	output[1] = (fabsf(here[0] - top[0]) >= m_config.dept_thresh) ? 1.0 : 0.0;
 	output[2] = 0.0;
 	output[3] = 1.0;
 }
@@ -763,8 +744,8 @@ void SMAABlendingWeightCalculationOperation::detectHorizontalCornerPattern(float
 		factor[1] -= rounding * e[0];
 	}
 
-	weights[0] *= saturate(factor[0]);
-	weights[1] *= saturate(factor[1]);
+	weights[0] *= CLAMPIS(factor[0], 0.0, 1.0);
+	weights[1] *= CLAMPIS(factor[1], 0.0, 1.0);
 }
 
 void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float weights[2],
@@ -792,8 +773,8 @@ void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float w
 		factor[1] -= rounding * e[1];
 	}
 
-	weights[0] *= saturate(factor[0]);
-	weights[1] *= saturate(factor[1]);
+	weights[0] *= CLAMPIS(factor[0], 0.0, 1.0);
+	weights[1] *= CLAMPIS(factor[1], 0.0, 1.0);
 }
 
 /*-----------------------------------------------------------------------------*/
