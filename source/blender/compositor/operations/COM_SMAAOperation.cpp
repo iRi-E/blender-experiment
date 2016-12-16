@@ -162,7 +162,7 @@ void SMAAEdgeDetectionOperation::calculatePredicatedThreshold(int x, int y, floa
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	copy_v2_fl(threshold, 1.0);
+	copy_v2_fl(threshold, 1.0f);
 
 	if (fabsf(here[0] - left[0]) >= m_config.pred_thresh)
 		threshold[0] -= m_config.pred_str;
@@ -183,7 +183,7 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float delta_x, delta_y, finalDelta;
 
 	/* RGB weights to convert to luma */
-	float weights[3] = {0.2126, 0.7152, 0.0722};
+	float weights[3] = {0.2126f, 0.7152f, 0.0722f};
 
 	/* Calculate the threshold: */
 	if (m_config.pred)
@@ -202,10 +202,10 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	Dtop  = fabsf(L - Ltop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= threshold[0]) ? 1.0 : 0.0;
-	output[1] = (Dtop >= threshold[1]) ? 1.0 : 0.0;
-	output[2] = 0.0;
-	output[3] = 1.0;
+	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
+	output[1] = (Dtop >= threshold[1]) ? 1.0f : 0.0f;
+	output[2] = 0.0f;
+	output[3] = 1.0f;
 
 	/* Then discard if there is no edge: */
 	if (is_zero_v2(output))
@@ -238,9 +238,9 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Local contrast adaptation: */
 	if (finalDelta > m_config.adapt_fac * Dleft)
-		output[0] =  0.0;
+		output[0] =  0.0f;
 	if (finalDelta > m_config.adapt_fac * Dtop)
-		output[1] =  0.0;
+		output[1] =  0.0f;
 }
 
 /* Color Edge Detection */
@@ -267,10 +267,10 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	Dtop  = fmaxf(fmaxf(fabsf(C[0] - Ctop[0]), fabsf(C[1] - Ctop[1])), fabsf(C[2] - Ctop[2]));
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= threshold[0]) ? 1.0 : 0.0;
-	output[1] = (Dtop >= threshold[1]) ? 1.0 : 0.0;
-	output[2] = 0.0;
-	output[3] = 1.0;
+	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
+	output[1] = (Dtop >= threshold[1]) ? 1.0f : 0.0f;
+	output[2] = 0.0f;
+	output[3] = 1.0f;
 
 	/* Then discard if there is no edge: */
 	if (is_zero_v2(output))
@@ -299,9 +299,9 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 
 	/* Local contrast adaptation: */
 	if (finalDelta > m_config.adapt_fac * Dleft)
-		output[0] =  0.0;
+		output[0] =  0.0f;
 	if (finalDelta > m_config.adapt_fac * Dtop)
-		output[1] =  0.0;
+		output[1] =  0.0f;
 }
 
 /* Depth Edge Detection */
@@ -314,10 +314,10 @@ void SMAADepthEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	output[0] = (fabsf(here[0] - left[0]) >= m_config.dept_thresh) ? 1.0 : 0.0;
-	output[1] = (fabsf(here[0] - top[0]) >= m_config.dept_thresh) ? 1.0 : 0.0;
-	output[2] = 0.0;
-	output[3] = 1.0;
+	output[0] = (fabsf(here[0] - left[0]) >= m_config.dept_thresh) ? 1.0f : 0.0f;
+	output[1] = (fabsf(here[0] - top[0]) >= m_config.dept_thresh) ? 1.0f : 0.0f;
+	output[2] = 0.0f;
+	output[3] = 1.0f;
 }
 
 bool SMAADepthEdgeDetectionOperation::determineDependingAreaOfInterest(rcti *input,
@@ -364,7 +364,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 	sample(m_imageReader, x, y, e);
 
 	/* Edge at north */
-	if (e[1] > 0.0) {
+	if (e[1] > 0.0f) {
 		if (m_config.diag) {
 			/* Diagonals have both north and west edges, so searching for them in */
 			/* one of the boundaries is enough. */
@@ -386,9 +386,9 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 		/* Now fetch the left and right crossing edges, two at a time using bilinear */
 		/* filtering. Sampling at -0.25 enables to discern what value each edge has: */
 		float c[4], e1, e2;
-		sample_level_zero_yoffset(m_imageReader, left, y, -0.25, c);
+		sample_level_zero_yoffset(m_imageReader, left, y, -0.25f, c);
 		e1 = c[0];
-		sample_level_zero_yoffset(m_imageReader, right + 1, y, -0.25, c);
+		sample_level_zero_yoffset(m_imageReader, right + 1, y, -0.25f, c);
 		e2 = c[0];
 
 		/* area() below needs a sqrt, as the areas texture is compressed */
@@ -407,7 +407,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 	}
 
 	/* Edge at west */
-	if (e[0] > 0.0) {
+	if (e[0] > 0.0f) {
 		/* Find the distance to the top and the bottom: */
 		int top = searchYUp(x, y);
 		int bottom = searchYDown(x, y);
@@ -415,9 +415,9 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 
 		/* Fetch the top ang bottom crossing edges: */
 		float c[4], e1, e2;
-		sample_level_zero_xoffset(m_imageReader, x, top, -0.25, c);
+		sample_level_zero_xoffset(m_imageReader, x, top, -0.25f, c);
 		e1 = c[1];
-		sample_level_zero_xoffset(m_imageReader, x, bottom + 1, -0.25, c);
+		sample_level_zero_xoffset(m_imageReader, x, bottom + 1, -0.25f, c);
 		e2 = c[1];
 
 		/* area() below needs a sqrt, as the areas texture is compressed */
@@ -471,7 +471,7 @@ int SMAABlendingWeightCalculationOperation::searchDiag1(int x, int y, int dx, in
 		y += dy;
 		d++;
 		sample(m_imageReader, x, y, e);
-		if (e[0] <= 0.9 || e[1] <= 0.9) {
+		if (e[0] <= 0.9f || e[1] <= 0.9f) {
 			*found = true;
 			break;
 		}
@@ -493,7 +493,7 @@ int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dx, in
 		d++;
 		sample(m_imageReader, x + 1, y, e1);
 		sample(m_imageReader, x, y, e2);
-		if (e1[0] <= 0.9 || e2[1] <= 0.9) {
+		if (e1[0] <= 0.9f || e2[1] <= 0.9f) {
 			*found = true;
 			break;
 		}
@@ -513,8 +513,8 @@ void SMAABlendingWeightCalculationOperation::areaDiag(int d1, int d2, int e1, in
 	float y = (float)(SMAA_AREATEX_MAX_DISTANCE_DIAG * e2 + d2);
 
 	/* We do a bias for mapping to texel space: */
-	x += 0.5;
-	y += 0.5;
+	x += 0.5f;
+	y += 0.5f;
 
 	/* Do it! */
 	areatex_sample_level_zero(areatex_diag, x, y, weights);
@@ -532,7 +532,7 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	zero_v2(weights);
 
 	/* Search for the line ends: */
-	if (e[0] > 0.0) {
+	if (e[0] > 0.0f) {
 		d1 = searchDiag1(x, y, -1, 1, &end, &d1_found);
 		d1 += (int)end;
 	} else {
@@ -578,7 +578,7 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	/* Search for the line ends: */
 	d1 = searchDiag2(x, y, -1, -1, &end, &d1_found);
 	sample(m_imageReader, x + 1, y, edges);
-	if (edges[0] > 0.0) {
+	if (edges[0] > 0.0f) {
 		d2 = searchDiag2(x, y, 1, 1, &end, &d2_found);
 		d2 += (int)end;
 	} else {
@@ -633,11 +633,11 @@ int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 
 	while (x >= end) {
 		sample(m_imageReader, x, y, e);
-		if (e[1] == 0.0 || /* Is the edge not activated? */
-		    e[0] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[1] == 0.0f || /* Is the edge not activated? */
+		    e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		sample(m_imageReader, x, y - 1, e);
-		if (e[0] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		x--;
 	}
@@ -652,11 +652,11 @@ int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 
 	while (x <= end) {
 		sample(m_imageReader, x + 1, y, e);
-		if (e[1] == 0.0 || /* Is the edge not activated? */
-		    e[0] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[1] == 0.0f || /* Is the edge not activated? */
+		    e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		sample(m_imageReader, x + 1, y - 1, e);
-		if (e[0] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		x++;
 	}
@@ -671,11 +671,11 @@ int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 
 	while (y >= end) {
 		sample(m_imageReader, x, y, e);
-		if (e[0] == 0.0 || /* Is the edge not activated? */
-		    e[1] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[0] == 0.0f || /* Is the edge not activated? */
+		    e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		sample(m_imageReader, x - 1, y, e);
-		if (e[1] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		y--;
 	}
@@ -690,11 +690,11 @@ int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 
 	while (y <= end) {
 		sample(m_imageReader, x, y + 1, e);
-		if (e[0] == 0.0 || /* Is the edge not activated? */
-		    e[1] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[0] == 0.0f || /* Is the edge not activated? */
+		    e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		sample(m_imageReader, x - 1, y + 1, e);
-		if (e[1] != 0.0)   /* Or is there a crossing edge that breaks the line? */
+		if (e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
 		y++;
 	}
@@ -704,12 +704,12 @@ int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 
 void SMAABlendingWeightCalculationOperation::area(float dist[2], float e1, float e2, float weights[2])
 {
-	float x = SMAA_AREATEX_MAX_DISTANCE * roundf(4.0 * e1) + dist[0];
-	float y = SMAA_AREATEX_MAX_DISTANCE * roundf(4.0 * e2) + dist[1];
+	float x = SMAA_AREATEX_MAX_DISTANCE * roundf(4.0f * e1) + dist[0];
+	float y = SMAA_AREATEX_MAX_DISTANCE * roundf(4.0f * e2) + dist[1];
 
 	/* We do a bias for mapping to texel space: */
-	x += 0.5;
-	y += 0.5;
+	x += 0.5f;
+	y += 0.5f;
 
 	/* Do it! */
 	areatex_sample_level_zero(areatex, x, y, weights);
@@ -722,12 +722,12 @@ void SMAABlendingWeightCalculationOperation::area(float dist[2], float e1, float
 void SMAABlendingWeightCalculationOperation::detectHorizontalCornerPattern(float weights[2],
 									   int left, int right, int y, int d[2])
 {
-	float factor[2] = {1.0, 1.0};
-	float rounding = 1.0 - m_config.rounding / 100.0;
+	float factor[2] = {1.0f, 1.0f};
+	float rounding = 1.0f - m_config.rounding / 100.0f;
 	float e[4];
 
 	/* Reduce blending for pixels in the center of a line. */
-	rounding /= (d[0] == d[1]) ? 2.0 : 1.0;
+	rounding /= (d[0] == d[1]) ? 2.0f : 1.0f;
 
 	/* Near the left corner */
 	if (d[0] <= d[1]) {
@@ -744,19 +744,19 @@ void SMAABlendingWeightCalculationOperation::detectHorizontalCornerPattern(float
 		factor[1] -= rounding * e[0];
 	}
 
-	weights[0] *= CLAMPIS(factor[0], 0.0, 1.0);
-	weights[1] *= CLAMPIS(factor[1], 0.0, 1.0);
+	weights[0] *= CLAMPIS(factor[0], 0.0f, 1.0f);
+	weights[1] *= CLAMPIS(factor[1], 0.0f, 1.0f);
 }
 
 void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float weights[2],
 									 int x, int top, int bottom, int d[2])
 {
-	float factor[2] = {1.0, 1.0};
-	float rounding = 1.0 - m_config.rounding / 100.0;
+	float factor[2] = {1.0f, 1.0f};
+	float rounding = 1.0f - m_config.rounding / 100.0f;
 	float e[4];
 
 	/* Reduce blending for pixels in the center of a line. */
-	rounding /= (d[0] == d[1]) ? 2.0 : 1.0;
+	rounding /= (d[0] == d[1]) ? 2.0f : 1.0f;
 
 	/* Near the top corner */
 	if (d[0] <= d[1]) {
@@ -773,8 +773,8 @@ void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float w
 		factor[1] -= rounding * e[1];
 	}
 
-	weights[0] *= CLAMPIS(factor[0], 0.0, 1.0);
-	weights[1] *= CLAMPIS(factor[1], 0.0, 1.0);
+	weights[0] *= CLAMPIS(factor[0], 0.0f, 1.0f);
+	weights[1] *= CLAMPIS(factor[1], 0.0f, 1.0f);
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -816,7 +816,7 @@ void SMAANeighborhoodBlendingOperation::executePixel(float output[4], int x, int
 	bottom = e[1];
 
 	/* Is there any blending weight with a value greater than 0.0? */
-	if (right + bottom + left + top < 1e-5) {
+	if (right + bottom + left + top < 1e-5f) {
 		sample(m_image1Reader, x, y, output);
 		return;
 	}
