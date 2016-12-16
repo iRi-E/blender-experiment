@@ -1467,7 +1467,8 @@ static void node_composit_buts_antialiasing(uiLayout *layout, bContext *UNUSED(C
 		uiItemR(sub, ptr, "predication_threshold", 0, NULL, ICON_NONE);
 		uiItemR(sub, ptr, "predication_scale", 0, NULL, ICON_NONE);
 		uiItemR(sub, ptr, "predication_strength", 0, NULL, ICON_NONE);
-	} else {
+	}
+	else {
 		uiItemR(col, ptr, "depth_threshold", 0, NULL, ICON_NONE);
 	}
 
