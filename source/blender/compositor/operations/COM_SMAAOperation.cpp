@@ -535,7 +535,8 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	if (e[0] > 0.0f) {
 		d1 = searchDiag1(x, y, -1, 1, &end, &d1_found);
 		d1 += (int)end;
-	} else {
+	}
+	else {
 		d1 = 0;
 		d1_found = true;
 	}
@@ -581,7 +582,8 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	if (edges[0] > 0.0f) {
 		d2 = searchDiag2(x, y, 1, 1, &end, &d2_found);
 		d2 += (int)end;
-	} else {
+	}
+	else {
 		d2 = 0;
 		d2_found = true;
 	}
@@ -831,7 +833,8 @@ void SMAANeighborhoodBlendingOperation::executePixel(float output[4], int x, int
 		offset2 = -left;
 		weight1 = right / (right + left);
 		weight2 = left / (right + left);
-	} else {
+	}
+	else {
 		samplefunc = sample_level_zero_yoffset;
 		offset1 = bottom;
 		offset2 = -top;

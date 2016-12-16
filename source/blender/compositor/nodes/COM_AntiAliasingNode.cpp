@@ -31,15 +31,15 @@ void AntiAliasingNode::convertToOperations(NodeConverter &converter, const Compo
 	SMAAEdgeDetectionOperation *operation1 = NULL;
 
 	switch (data->detect_type) {
-	case CMP_NODE_ANTIALIASING_LUMA:
-		operation1 = new SMAALumaEdgeDetectionOperation();
-		break;
-	case CMP_NODE_ANTIALIASING_COLOR:
-		operation1 = new SMAAColorEdgeDetectionOperation();
-		break;
-	case CMP_NODE_ANTIALIASING_DEPTH:
-		operation1 = new SMAADepthEdgeDetectionOperation();
-		break;
+		case CMP_NODE_ANTIALIASING_LUMA:
+			operation1 = new SMAALumaEdgeDetectionOperation();
+			break;
+		case CMP_NODE_ANTIALIASING_COLOR:
+			operation1 = new SMAAColorEdgeDetectionOperation();
+			break;
+		case CMP_NODE_ANTIALIASING_DEPTH:
+			operation1 = new SMAADepthEdgeDetectionOperation();
+			break;
 	}
 	operation1->setData(data);
 	converter.addOperation(operation1);
