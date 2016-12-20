@@ -6816,7 +6816,7 @@ static void def_cmp_antialiasing(StructRNA *srna)
 
 	prop = RNA_def_property(srna, "max_search_steps", PROP_INT, PROP_UNSIGNED);
 	RNA_def_property_int_sdna(prop, NULL, "search_steps");
-	RNA_def_property_range(prop, 0, 112);
+	RNA_def_property_range(prop, 0, 104);
 	RNA_def_property_ui_text(prop, "Search Steps", "Maximum steps performed in the horizontal/vertical pattern searches, at each side of the pixel");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
@@ -6827,7 +6827,7 @@ static void def_cmp_antialiasing(StructRNA *srna)
 
 	prop = RNA_def_property(srna, "max_search_steps_diag", PROP_INT, PROP_UNSIGNED);
 	RNA_def_property_int_sdna(prop, NULL, "search_steps_diag");
-	RNA_def_property_range(prop, 0, 20);
+	RNA_def_property_range(prop, 0, 18);
 	RNA_def_property_ui_text(prop, "Search Steps", "Maximum steps performed in the diagonal pattern searches, at each side of the pixel");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 

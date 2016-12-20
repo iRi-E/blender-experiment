@@ -440,12 +440,15 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 									      ReadBufferOperation *readOperation, rcti *output)
 {
 	rcti newInput;
-	int max_distance = max(m_config.search_steps * 2, m_config.diag ? m_config.search_steps_diag : 0);
 
-	newInput.xmax = input->xmax + max_distance;
-	newInput.xmin = input->xmin - max_distance;
-	newInput.ymax = input->ymax + max_distance;
-	newInput.ymin = input->ymin - max_distance;
+	newInput.xmax = input->xmax + max(m_config.search_steps * 2 + 2,
+					  m_config.diag ? m_config.search_steps_diag + 1: 0);
+	newInput.xmin = input->xmin - max(m_config.search_steps * 2 + 1,
+					  m_config.diag ? m_config.search_steps_diag : 0);
+	newInput.ymax = input->ymax + max(m_config.search_steps * 2 + 2,
+					  m_config.diag ? m_config.search_steps_diag : 0);
+	newInput.ymin = input->ymin - max(m_config.search_steps * 2 + 1,
+					  m_config.diag ? m_config.search_steps_diag : 0);
 
 	return NodeOperation::determineDependingAreaOfInterest(&newInput, readOperation, output);
 }
@@ -626,7 +629,7 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 {
-	int end = x - 2 * m_config.search_steps;
+	int end = x - 2 * m_config.search_steps - 1;
 	float e[4];
 
 	while (x >= end) {
@@ -645,7 +648,7 @@ int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 {
-	int end = x + 2 * m_config.search_steps;
+	int end = x + 2 * m_config.search_steps + 1;
 	float e[4];
 
 	while (x <= end) {
@@ -664,7 +667,7 @@ int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 {
-	int end = y - 2 * m_config.search_steps;
+	int end = y - 2 * m_config.search_steps - 1;
 	float e[4];
 
 	while (y >= end) {
@@ -683,7 +686,7 @@ int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 {
-	int end = y + 2 * m_config.search_steps;
+	int end = y + 2 * m_config.search_steps + 1;
 	float e[4];
 
 	while (y <= end) {
