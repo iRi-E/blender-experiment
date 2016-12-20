@@ -103,21 +103,21 @@ public:
 	bool determineDependingAreaOfInterest(rcti *input, ReadBufferOperation *readOperation, rcti *output);
 private:
 	/* Diagonal Search Functions */
-	int searchDiag1(int x, int y, int dx, int dy, float end[2], bool *found);
-	int searchDiag2(int x, int y, int dx, int dy, float end[2], bool *found);
+	int searchDiag1(int x, int y, int dx, int dy, float *end, bool *found);
+	int searchDiag2(int x, int y, int dx, int dy, float *end, bool *found);
 	void areaDiag(int d1, int d2, int e1, int e2, float weights[2]);
-	void calculateDiagWeights(int x, int y, float e[2], float weights[2]);
+	void calculateDiagWeights(int x, int y, const float edges[2], float weights[2]);
 
 	/* Horizontal/Vertical Search Functions */
 	int searchXLeft(int x, int y);
 	int searchXRight(int x, int y);
 	int searchYUp(int x, int y);
 	int searchYDown(int x, int y);
-	void area(float dist[2], float e1, float e2, float weights[2]);
+	void area(int d1, int d2, int e1, int e2, float weights[2]);
 
 	/*  Corner Detection Functions */
-	void detectHorizontalCornerPattern(float weights[2], int left, int right, int y, int d[2]);
-	void detectVerticalCornerPattern(float weights[2], int x, int top, int bottom, int d[2]);
+	void detectHorizontalCornerPattern(float weights[2], int left, int right, int y, int d1, int d2);
+	void detectVerticalCornerPattern(float weights[2], int x, int top, int bottom, int d1, int d2);
 };
 
 /*-----------------------------------------------------------------------------*/
