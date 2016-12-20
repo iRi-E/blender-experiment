@@ -241,6 +241,11 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 /* Color Edge Detection */
 
+static float color_delta(const float color1[4], const float color2[4])
+{
+	return fmaxf(fmaxf(fabsf(color1[0] - color2[0]), fabsf(color1[1] - color2[1])), fabsf(color1[2] - color2[2]));
+}
+
 void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y, void */*data*/)
 {
 	float threshold[2];
@@ -259,8 +264,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	sample(m_imageReader, x, y, C);
 	sample(m_imageReader, x - 1, y, Cleft);
 	sample(m_imageReader, x, y - 1, Ctop);
-	Dleft = fmaxf(fmaxf(fabsf(C[0] - Cleft[0]), fabsf(C[1] - Cleft[1])), fabsf(C[2] - Cleft[2]));
-	Dtop  = fmaxf(fmaxf(fabsf(C[0] - Ctop[0]), fabsf(C[1] - Ctop[1])), fabsf(C[2] - Ctop[2]));
+	Dleft = color_delta(C, Cleft);
+	Dtop  = color_delta(C, Ctop);
 
 	/* We do the usual threshold: */
 	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
@@ -275,8 +280,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	/* Calculate right and bottom deltas: */
 	sample(m_imageReader, x + 1, y, Cright);
 	sample(m_imageReader, x, y + 1, Cbottom);
-	Dright  = fmaxf(fmaxf(fabsf(C[0] - Cright[0]), fabsf(C[1] - Cright[1])), fabsf(C[2] - Cright[2]));
-	Dbottom = fmaxf(fmaxf(fabsf(C[0] - Cbottom[0]), fabsf(C[1] - Cbottom[1])), fabsf(C[2] - Cbottom[2]));
+	Dright  = color_delta(C, Cright);
+	Dbottom = color_delta(C, Cbottom);
 
 	/* Calculate the maximum delta in the direct neighborhood: */
 	delta_x = fmaxf(Dleft, Dright);
@@ -285,8 +290,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	/* Calculate left-left and top-top deltas: */
 	sample(m_imageReader, x - 2, y, Cleftleft);
 	sample(m_imageReader, x, y - 2, Ctoptop);
-	Dleftleft = fmaxf(fmaxf(fabsf(C[0] - Cleftleft[0]), fabsf(C[1] - Cleftleft[1])), fabsf(C[2] - Cleftleft[2]));
-	Dtoptop   = fmaxf(fmaxf(fabsf(C[0] - Ctoptop[0]), fabsf(C[1] - Ctoptop[1])), fabsf(C[2] - Ctoptop[2]));
+	Dleftleft = color_delta(Cleft, Cleftleft);
+	Dtoptop   = color_delta(Ctop, Ctoptop);
 
 	/* Calculate the final maximum delta: */
 	delta_x = fmaxf(delta_x, Dleftleft);
