@@ -359,80 +359,81 @@ void SMAABlendingWeightCalculationOperation::initExecution()
 
 void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x, int y, void */*data*/)
 {
-	float e[4], w[2];
+	float edges[4], c[4];
 
 	zero_v4(output);
-	sample(m_imageReader, x, y, e);
+	sample(m_imageReader, x, y, edges);
 
 	/* Edge at north */
-	if (e[1] > 0.0f) {
+	if (edges[1] > 0.0f) {
 		if (m_config.diag) {
 			/* Diagonals have both north and west edges, so searching for them in */
 			/* one of the boundaries is enough. */
-			calculateDiagWeights(x, y, e, w);
+			calculateDiagWeights(x, y, edges, output);
 
 			/* We give priority to diagonals, so if we find a diagonal we skip  */
 			/* horizontal/vertical processing. */
-			if (!is_zero_v2(w)) {
-				copy_v2_v2(output, w);
+			if (!is_zero_v2(output))
 				return;
-			}
 		}
 
 		/* Find the distance to the left and the right: */
 		int left = searchXLeft(x, y);
 		int right = searchXRight(x, y);
-		int d[2] = {abs(left - x), abs(right - x)};
+		int d1 = abs(left - x), d2 = abs(right - x);
 
-		/* Now fetch the left and right crossing edges, two at a time using bilinear */
-		/* filtering. Sampling at -0.25 enables to discern what value each edge has: */
-		float c[4], e1, e2;
-		sample_level_zero_yoffset(m_imageReader, left, y, -0.25f, c);
-		e1 = c[0];
-		sample_level_zero_yoffset(m_imageReader, right + 1, y, -0.25f, c);
-		e2 = c[0];
-
-		/* area() below needs a sqrt, as the areas texture is compressed */
-		/* quadratically: */
-		float sqrt_d[2] = {sqrtf((float)d[0]), sqrtf((float)d[1])};
+		/* Fetch the left and right crossing edges: */
+		int e1 = 0, e2 = 0;
+		sample(m_imageReader, left, y - 1, c);
+		if (c[0] > 0.0)
+			e1 += 1;
+		sample(m_imageReader, left, y, c);
+		if (c[0] > 0.0)
+			e1 += 3;
+		sample(m_imageReader, right + 1, y - 1, c);
+		if (c[0] > 0.0)
+			e2 += 1;
+		sample(m_imageReader, right + 1, y, c);
+		if (c[0] > 0.0)
+			e2 += 3;
 
 		/* Ok, we know how this pattern looks like, now it is time for getting */
 		/* the actual area: */
-		area(sqrt_d, e1, e2, w);
+		area(d1, d2, e1, e2, output); /* R, G */
 
 		/* Fix corners: */
 		if (m_config.corner)
-			detectHorizontalCornerPattern(w, left, right, y, d);
-
-		copy_v2_v2(output, w);
+			detectHorizontalCornerPattern(output, left, right, y, d1, d2);
 	}
 
 	/* Edge at west */
-	if (e[0] > 0.0f) {
+	if (edges[0] > 0.0f) {
 		/* Find the distance to the top and the bottom: */
 		int top = searchYUp(x, y);
 		int bottom = searchYDown(x, y);
-		int d[2] = {abs(top - y), abs(bottom - y)};
+		int d1 = abs(top - y), d2 = abs(bottom - y);
 
 		/* Fetch the top ang bottom crossing edges: */
-		float c[4], e1, e2;
-		sample_level_zero_xoffset(m_imageReader, x, top, -0.25f, c);
-		e1 = c[1];
-		sample_level_zero_xoffset(m_imageReader, x, bottom + 1, -0.25f, c);
-		e2 = c[1];
-
-		/* area() below needs a sqrt, as the areas texture is compressed */
-		/* quadratically: */
-		float sqrt_d[2] = {sqrtf((float)d[0]), sqrtf((float)d[1])};
+		int e1 = 0, e2 = 0;
+		sample(m_imageReader, x - 1, top, c);
+		if (c[1] > 0.0)
+			e1 += 1;
+		sample(m_imageReader, x, top, c);
+		if (c[1] > 0.0)
+			e1 += 3;
+		sample(m_imageReader, x - 1, bottom + 1, c);
+		if (c[1] > 0.0)
+			e2 += 1;
+		sample(m_imageReader, x, bottom + 1, c);
+		if (c[1] > 0.0)
+			e2 += 3;
 
 		/* Get the area for this direction: */
-		area(sqrt_d, e1, e2, w);
+		area(d1, d2, e1, e2, output + 2); /* B, A */
 
 		/* Fix corners: */
 		if (m_config.corner)
-			detectVerticalCornerPattern(w, x, top, bottom, d);
-
-		copy_v2_v2(output + 2, w);
+			detectVerticalCornerPattern(output + 2, x, top, bottom, d1, d2);
 	}
 }
 
@@ -527,18 +528,19 @@ void SMAABlendingWeightCalculationOperation::areaDiag(int d1, int d2, int e1, in
 /**
  * This searches for diagonal patterns and returns the corresponding weights.
  */
-void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, float e[2], float weights[2])
+void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, const float edges[2], float weights[2])
 {
 	int d1, d2;
 	bool d1_found, d2_found;
-	float end, edges[4];
+	float end, e[4], c[4];
 
 	zero_v2(weights);
 
 	/* Search for the line ends: */
-	if (e[0] > 0.0f) {
+	if (edges[0] > 0.0f) {
 		d1 = searchDiag1(x, y, -1, 1, &end, &d1_found);
-		d1 += (int)end;
+		if (end > 0.0)
+			d1++;
 	}
 	else {
 		d1 = 0;
@@ -547,33 +549,30 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	d2 = searchDiag1(x, y, 1, -1, &end, &d2_found);
 
 	if (d1 + d2 > 2) { /* d1 + d2 + 1 > 3 */
-		int c[2];
 		int e1 = 0, e2 = 0;
 
 		if (d1_found) {
 			/* Fetch the crossing edges: */
 			int coords_x = x - d1, coords_y = y + d1;
 
-			sample(m_imageReader, coords_x - 1, coords_y, edges);
-			c[0] = (int)edges[1];
-			sample(m_imageReader, coords_x, coords_y, edges);
-			c[1] = (int)edges[0];
-
-			/* Merge crossing edges at each side into a single value: */
-			e1 = 2 * c[0] + c[1];
+			sample(m_imageReader, coords_x - 1, coords_y, c);
+			if (c[1] > 0.0)
+				e1 += 2;
+			sample(m_imageReader, coords_x, coords_y, c);
+			if (c[0] > 0.0)
+				e1 += 1;
 		}
 
 		if (d2_found) {
 			/* Fetch the crossing edges: */
 			int coords_x = x + d2, coords_y = y - d2;
 
-			sample(m_imageReader, coords_x + 1, coords_y, edges);
-			c[0] = (int)edges[1];
-			sample(m_imageReader, coords_x + 1, coords_y - 1, edges);
-			c[1] = (int)edges[0];
-
-			/* Merge crossing edges at each side into a single value: */
-			e2 = 2 * c[0] + c[1];
+			sample(m_imageReader, coords_x + 1, coords_y, c);
+			if (c[1] > 0.0)
+				e2 += 2;
+			sample(m_imageReader, coords_x + 1, coords_y - 1, c);
+			if (c[0] > 0.0)
+				e2 += 1;
 		}
 
 		/* Fetch the areas for this line: */
@@ -582,10 +581,11 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 	/* Search for the line ends: */
 	d1 = searchDiag2(x, y, -1, -1, &end, &d1_found);
-	sample(m_imageReader, x + 1, y, edges);
-	if (edges[0] > 0.0f) {
+	sample(m_imageReader, x + 1, y, e);
+	if (e[0] > 0.0f) {
 		d2 = searchDiag2(x, y, 1, 1, &end, &d2_found);
-		d2 += (int)end;
+		if (end > 0.0)
+			d2++;
 	}
 	else {
 		d2 = 0;
@@ -593,32 +593,29 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	}
 
 	if (d1 + d2 > 2) { /* d1 + d2 + 1 > 3 */
-		int c[2];
 		int e1 = 0, e2 = 0;
 
 		if (d1_found) {
 			/* Fetch the crossing edges: */
 			int coords_x = x - d1, coords_y = y - d1;
 
-			sample(m_imageReader, coords_x - 1, coords_y, edges);
-			c[0] = (int)edges[1];
-			sample(m_imageReader, coords_x, coords_y - 1, edges);
-			c[1] = (int)edges[0];
-
-			/* Merge crossing edges at each side into a single value: */
-			e1 = 2 * c[0] + c[1];
+			sample(m_imageReader, coords_x - 1, coords_y, c);
+			if (c[1] > 0.0)
+				e1 += 2;
+			sample(m_imageReader, coords_x, coords_y - 1, c);
+			if (c[0] > 0.0)
+				e1 += 1;
 		}
 
 		if (d2_found) {
 			/* Fetch the crossing edges: */
 			int coords_x = x + d2, coords_y = y + d2;
 
-			sample(m_imageReader, coords_x + 1, coords_y, edges);
-			c[0] = (int)edges[1];
-			c[1] = (int)edges[0];
-
-			/* Merge crossing edges at each side into a single value: */
-			e2 = 2 * c[0] + c[1];
+			sample(m_imageReader, coords_x + 1, coords_y, c);
+			if (c[1] > 0.0)
+				e2 += 2;
+			if (c[0] > 0.0)
+				e2 += 1;
 		}
 
 		/* Fetch the areas for this line: */
@@ -708,10 +705,11 @@ int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 	return y;
 }
 
-void SMAABlendingWeightCalculationOperation::area(float dist[2], float e1, float e2, float weights[2])
+void SMAABlendingWeightCalculationOperation::area(int d1, int d2, int e1, int e2, float weights[2])
 {
-	float x = SMAA_AREATEX_MAX_DISTANCE * roundf(4.0f * e1) + dist[0];
-	float y = SMAA_AREATEX_MAX_DISTANCE * roundf(4.0f * e2) + dist[1];
+	/* The areas texture is compressed  quadratically: */
+	float x = (float)(SMAA_AREATEX_MAX_DISTANCE * e1) + sqrtf((float)d1);
+	float y = (float)(SMAA_AREATEX_MAX_DISTANCE * e2) + sqrtf((float)d2);
 
 	/* We do a bias for mapping to texel space: */
 	x += 0.5f;
@@ -726,24 +724,24 @@ void SMAABlendingWeightCalculationOperation::area(float dist[2], float e1, float
 /* Corner Detection Functions */
 
 void SMAABlendingWeightCalculationOperation::detectHorizontalCornerPattern(float weights[2],
-									   int left, int right, int y, int d[2])
+									   int left, int right, int y, int d1, int d2)
 {
 	float factor[2] = {1.0f, 1.0f};
 	float rounding = 1.0f - m_config.rounding / 100.0f;
 	float e[4];
 
 	/* Reduce blending for pixels in the center of a line. */
-	rounding /= (d[0] == d[1]) ? 2.0f : 1.0f;
+	rounding *= (d1 == d2) ? 0.5f : 1.0f;
 
 	/* Near the left corner */
-	if (d[0] <= d[1]) {
+	if (d1 <= d2) {
 		sample(m_imageReader, left, y + 1, e);
 		factor[0] -= rounding * e[0];
 		sample(m_imageReader, left, y - 2, e);
 		factor[1] -= rounding * e[0];
 	}
 	/* Near the right corner */
-	if (d[0] >= d[1]) {
+	if (d1 >= d2) {
 		sample(m_imageReader, right + 1, y + 1, e);
 		factor[0] -= rounding * e[0];
 		sample(m_imageReader, right + 1, y - 2, e);
@@ -755,24 +753,24 @@ void SMAABlendingWeightCalculationOperation::detectHorizontalCornerPattern(float
 }
 
 void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float weights[2],
-									 int x, int top, int bottom, int d[2])
+									 int x, int top, int bottom, int d1, int d2)
 {
 	float factor[2] = {1.0f, 1.0f};
 	float rounding = 1.0f - m_config.rounding / 100.0f;
 	float e[4];
 
 	/* Reduce blending for pixels in the center of a line. */
-	rounding /= (d[0] == d[1]) ? 2.0f : 1.0f;
+	rounding *= (d1 == d2) ? 0.5f : 1.0f;
 
 	/* Near the top corner */
-	if (d[0] <= d[1]) {
+	if (d1 <= d2) {
 		sample(m_imageReader, x + 1, top, e);
 		factor[0] -= rounding * e[1];
 		sample(m_imageReader, x - 2, top, e);
 		factor[1] -= rounding * e[1];
 	}
 	/* Near the bottom corner */
-	if (d[0] >= d[1]) {
+	if (d1 >= d2) {
 		sample(m_imageReader, x + 1, bottom + 1, e);
 		factor[0] -= rounding * e[1];
 		sample(m_imageReader, x - 2, bottom + 1, e);
