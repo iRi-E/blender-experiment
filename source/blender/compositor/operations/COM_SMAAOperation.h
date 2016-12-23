@@ -103,8 +103,8 @@ public:
 	bool determineDependingAreaOfInterest(rcti *input, ReadBufferOperation *readOperation, rcti *output);
 private:
 	/* Diagonal Search Functions */
-	int searchDiag1(int x, int y, int dx, int dy, float *end, bool *found);
-	int searchDiag2(int x, int y, int dx, int dy, float *end, bool *found);
+	int searchDiag1(int x, int y, int dir, bool *found);
+	int searchDiag2(int x, int y, int dir, bool *found);
 	void areaDiag(int d1, int d2, int e1, int e2, float weights[2]);
 	void calculateDiagWeights(int x, int y, const float edges[2], float weights[2]);
 
