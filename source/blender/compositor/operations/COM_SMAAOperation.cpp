@@ -380,7 +380,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 		/* Find the distance to the left and the right: */
 		int left = searchXLeft(x, y);
 		int right = searchXRight(x, y);
-		int d1 = abs(left - x), d2 = abs(right - x);
+		int d1 = x - left, d2 = right - x;
 
 		/* Fetch the left and right crossing edges: */
 		int e1 = 0, e2 = 0;
@@ -411,7 +411,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 		/* Find the distance to the top and the bottom: */
 		int top = searchYUp(x, y);
 		int bottom = searchYDown(x, y);
-		int d1 = abs(top - y), d2 = abs(bottom - y);
+		int d1 = y - top, d2 = bottom - y;
 
 		/* Fetch the top ang bottom crossing edges: */
 		int e1 = 0, e2 = 0;
@@ -465,47 +465,51 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 /**
  * These functions allows to perform diagonal pattern searches.
  */
-int SMAABlendingWeightCalculationOperation::searchDiag1(int x, int y, int dx, int dy, float *end, bool *found)
+int SMAABlendingWeightCalculationOperation::searchDiag1(int x, int y, int dir, bool *found)
 {
 	float e[4];
-	int d = -1;
+	int end = x + m_config.search_steps_diag * dir;
 	*found = false;
 
-	while (d < m_config.search_steps_diag - 1) {
-		x += dx;
-		y += dy;
-		d++;
+	while (x != end) {
+		x += dir;
+		y -= dir;
 		sample(m_imageReader, x, y, e);
-		if (e[0] <= 0.9f || e[1] <= 0.9f) {
+		if (e[1] == 0.0f) {
+			*found = true;
+			return x - dir;
+		}
+		if (e[0] == 0.0f) {
 			*found = true;
 			break;
 		}
 	}
 
-	*end = e[1];
-	return d;
+	return (dir < 0) ? x : x - dir;
 }
 
-int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dx, int dy, float *end, bool *found)
+int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dir, bool *found)
 {
-	float e1[4], e2[4];
-	int d = -1;
+	float e[4];
+	int end = x + m_config.search_steps_diag * dir;
 	*found = false;
 
-	while (d < m_config.search_steps_diag - 1) {
-		x += dx;
-		y += dy;
-		d++;
-		sample(m_imageReader, x + 1, y, e1);
-		sample(m_imageReader, x, y, e2);
-		if (e1[0] <= 0.9f || e2[1] <= 0.9f) {
+	while (x != end) {
+		x += dir;
+		y += dir;
+		sample(m_imageReader, x, y, e);
+		if (e[1] == 0.0f) {
+			*found = true;
+			return x - dir;
+		}
+		sample(m_imageReader, x + 1, y, e);
+		if (e[0] == 0.0f) {
 			*found = true;
 			break;
 		}
 	}
 
-	*end = e2[1];
-	return d;
+	return (dir > 0) ? x : x - dir;
 }
 
 /**
@@ -532,21 +536,19 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 {
 	int d1, d2;
 	bool d1_found, d2_found;
-	float end, e[4], c[4];
+	float e[4], c[4];
 
 	zero_v2(weights);
 
 	/* Search for the line ends: */
 	if (edges[0] > 0.0f) {
-		d1 = searchDiag1(x, y, -1, 1, &end, &d1_found);
-		if (end > 0.0)
-			d1++;
+		d1 = x - searchDiag1(x, y, -1, &d1_found);
 	}
 	else {
 		d1 = 0;
 		d1_found = true;
 	}
-	d2 = searchDiag1(x, y, 1, -1, &end, &d2_found);
+	d2 = searchDiag1(x, y, 1, &d2_found) - x;
 
 	if (d1 + d2 > 2) { /* d1 + d2 + 1 > 3 */
 		int e1 = 0, e2 = 0;
@@ -580,12 +582,10 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 	}
 
 	/* Search for the line ends: */
-	d1 = searchDiag2(x, y, -1, -1, &end, &d1_found);
+	d1 = x - searchDiag2(x, y, -1, &d1_found);
 	sample(m_imageReader, x + 1, y, e);
 	if (e[0] > 0.0f) {
-		d2 = searchDiag2(x, y, 1, 1, &end, &d2_found);
-		if (end > 0.0)
-			d2++;
+		d2 = searchDiag2(x, y, 1, &d2_found) - x;
 	}
 	else {
 		d2 = 0;
