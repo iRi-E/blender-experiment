@@ -49,7 +49,7 @@
 /*-----------------------------------------------------------------------------*/
 /* Internal Functions to Sample Pixel Color */
 
-static void sample(SocketReader *reader, int x, int y, float color[4])
+static inline void sample(SocketReader *reader, int x, int y, float color[4])
 {
 	reader->read(color, CLAMPIS(x, 0, reader->getWidth() - 1), CLAMPIS(y, 0, reader->getHeight() -1), NULL);
 }
@@ -88,7 +88,7 @@ static void sample_level_zero_xoffset(SocketReader *reader, int x, int y, float 
 	color[3] = interpf(color10[3], color00[3], fx);
 }
 
-static const float* areatex_sample_internal(const float *areatex, int x, int y)
+static inline const float* areatex_sample_internal(const float *areatex, int x, int y)
 {
 	return &areatex[(CLAMPIS(x, 0, SMAA_AREATEX_SIZE - 1) +
 			 CLAMPIS(y, 0, SMAA_AREATEX_SIZE - 1) * SMAA_AREATEX_SIZE) * 2];
