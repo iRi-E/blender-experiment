@@ -21,6 +21,7 @@
 #include "COM_SMAAOperation.h"
 #include "COM_SMAAAreaTexture.h"
 #include "BLI_math.h"
+#include "IMB_colormanagement.h"
 
 /*
  * An implementation of Enhanced Subpixel Morphological Antialiasing (SMAA)
@@ -178,9 +179,6 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float Lleftleft, Ltoptop, Dleftleft, Dtoptop;
 	float delta_x, delta_y, finalDelta;
 
-	/* RGB weights to convert to luma */
-	float weights[3] = {0.2126f, 0.7152f, 0.0722f};
-
 	/* Calculate the threshold: */
 	if (m_config.pred)
 		calculatePredicatedThreshold(x, y, threshold);
@@ -189,11 +187,11 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate luma deltas: */
 	sample(m_imageReader, x, y, color);
-	L     = dot_v3v3(color, weights);
+	L     = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x - 1, y, color);
-	Lleft = dot_v3v3(color, weights);
+	Lleft = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x, y - 1, color);
-	Ltop  = dot_v3v3(color, weights);
+	Ltop  = IMB_colormanagement_get_luminance(color);
 	Dleft = fabsf(L - Lleft);
 	Dtop  = fabsf(L - Ltop);
 
@@ -209,9 +207,9 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate right and bottom deltas: */
 	sample(m_imageReader, x + 1, y, color);
-	Lright  = dot_v3v3(color, weights);
+	Lright  = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x, y + 1, color);
-	Lbottom = dot_v3v3(color, weights);
+	Lbottom = IMB_colormanagement_get_luminance(color);
 	Dright  = fabsf(L - Lright);
 	Dbottom = fabsf(L - Lbottom);
 
@@ -221,9 +219,9 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate left-left and top-top deltas: */
 	sample(m_imageReader, x - 2, y, color);
-	Lleftleft = dot_v3v3(color, weights);
+	Lleftleft = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x, y - 2, color);
-	Ltoptop   = dot_v3v3(color, weights);
+	Ltoptop   = IMB_colormanagement_get_luminance(color);
 	Dleftleft = fabsf(Lleft - Lleftleft);
 	Dtoptop   = fabsf(Ltop - Ltoptop);
 
