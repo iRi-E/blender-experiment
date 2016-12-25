@@ -60,7 +60,7 @@ static void node_composit_init_antialiasing(bNodeTree *UNUSED(ntree), bNode *nod
 	data->pred_thresh = 0.01f;
 	data->pred_scale = 2.0f;
 	data->pred_str = 0.4f;
-	data->search_steps = 32;
+	data->search_steps = 66;
 	data->search_steps_diag = 16;
 	data->rounding = 25;
 

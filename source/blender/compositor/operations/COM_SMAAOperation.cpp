@@ -445,13 +445,13 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 {
 	rcti newInput;
 
-	newInput.xmax = input->xmax + max(m_config.search_steps * 2 + 2,
+	newInput.xmax = input->xmax + max(m_config.search_steps,
 					  m_config.diag ? m_config.search_steps_diag + 1: 0);
-	newInput.xmin = input->xmin - max(m_config.search_steps * 2 + 1,
+	newInput.xmin = input->xmin - max(max(m_config.search_steps - 1, 1),
+					  m_config.diag ? m_config.search_steps_diag + 1: 0);
+	newInput.ymax = input->ymax + max(m_config.search_steps,
 					  m_config.diag ? m_config.search_steps_diag : 0);
-	newInput.ymax = input->ymax + max(m_config.search_steps * 2 + 2,
-					  m_config.diag ? m_config.search_steps_diag : 0);
-	newInput.ymin = input->ymin - max(m_config.search_steps * 2 + 1,
+	newInput.ymin = input->ymin - max(max(m_config.search_steps - 1, 1),
 					  m_config.diag ? m_config.search_steps_diag : 0);
 
 	return NodeOperation::determineDependingAreaOfInterest(&newInput, readOperation, output);
@@ -475,15 +475,15 @@ int SMAABlendingWeightCalculationOperation::searchDiag1(int x, int y, int dir, b
 		sample(m_imageReader, x, y, e);
 		if (e[1] == 0.0f) {
 			*found = true;
-			return x - dir;
+			break;
 		}
 		if (e[0] == 0.0f) {
 			*found = true;
-			break;
+			return (dir < 0) ? x : x - dir;
 		}
 	}
 
-	return (dir < 0) ? x : x - dir;
+	return x - dir;
 }
 
 int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dir, bool *found)
@@ -498,16 +498,16 @@ int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dir, b
 		sample(m_imageReader, x, y, e);
 		if (e[1] == 0.0f) {
 			*found = true;
-			return x - dir;
+			break;
 		}
 		sample(m_imageReader, x + 1, y, e);
 		if (e[0] == 0.0f) {
 			*found = true;
-			break;
+			return (dir > 0) ? x : x - dir;
 		}
 	}
 
-	return (dir > 0) ? x : x - dir;
+	return x - dir;
 }
 
 /**
@@ -629,10 +629,31 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 {
-	int end = x - 2 * m_config.search_steps - 1;
+	int end = x - m_config.search_steps;
 	float e[4];
 
-	while (x >= end) {
+	while (x > end) {
+		sample(m_imageReader, x, y, e);
+		if (e[1] == 0.0f)   /* Is the edge not activated? */
+			break;
+		if (e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
+			return x;
+		sample(m_imageReader, x, y - 1, e);
+		if (e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
+			return x;
+		x--;
+	}
+
+	return x + 1;
+}
+
+int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
+{
+	int end = x + m_config.search_steps;
+	float e[4];
+
+	while (x < end) {
+		x++;
 		sample(m_imageReader, x, y, e);
 		if (e[1] == 0.0f || /* Is the edge not activated? */
 		    e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
@@ -640,37 +661,38 @@ int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 		sample(m_imageReader, x, y - 1, e);
 		if (e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
-		x--;
 	}
 
-	return x;
-}
-
-int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
-{
-	int end = x + 2 * m_config.search_steps + 1;
-	float e[4];
-
-	while (x <= end) {
-		sample(m_imageReader, x + 1, y, e);
-		if (e[1] == 0.0f || /* Is the edge not activated? */
-		    e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
-			break;
-		sample(m_imageReader, x + 1, y - 1, e);
-		if (e[0] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
-			break;
-		x++;
-	}
-
-	return x;
+	return x - 1;
 }
 
 int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 {
-	int end = y - 2 * m_config.search_steps - 1;
+	int end = y - m_config.search_steps;
 	float e[4];
 
-	while (y >= end) {
+	while (y > end) {
+		sample(m_imageReader, x, y, e);
+		if (e[0] == 0.0f)   /* Is the edge not activated? */
+			break;
+		if (e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
+			return y;
+		sample(m_imageReader, x - 1, y, e);
+		if (e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
+			return y;
+		y--;
+	}
+
+	return y + 1;
+}
+
+int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
+{
+	int end = y + m_config.search_steps;
+	float e[4];
+
+	while (y < end) {
+		y++;
 		sample(m_imageReader, x, y, e);
 		if (e[0] == 0.0f || /* Is the edge not activated? */
 		    e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
@@ -678,29 +700,9 @@ int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 		sample(m_imageReader, x - 1, y, e);
 		if (e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
 			break;
-		y--;
 	}
 
-	return y;
-}
-
-int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
-{
-	int end = y + 2 * m_config.search_steps + 1;
-	float e[4];
-
-	while (y <= end) {
-		sample(m_imageReader, x, y + 1, e);
-		if (e[0] == 0.0f || /* Is the edge not activated? */
-		    e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
-			break;
-		sample(m_imageReader, x - 1, y + 1, e);
-		if (e[1] != 0.0f)   /* Or is there a crossing edge that breaks the line? */
-			break;
-		y++;
-	}
-
-	return y;
+	return y - 1;
 }
 
 void SMAABlendingWeightCalculationOperation::area(int d1, int d2, int e1, int e2, float weights[2])
