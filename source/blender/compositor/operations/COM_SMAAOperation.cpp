@@ -523,10 +523,6 @@ void SMAABlendingWeightCalculationOperation::areaDiag(int d1, int d2, int e1, in
 	float x = (float)(SMAA_AREATEX_MAX_DISTANCE_DIAG * e1 + d1);
 	float y = (float)(SMAA_AREATEX_MAX_DISTANCE_DIAG * e2 + d2);
 
-	/* We do a bias for mapping to texel space: */
-	x += 0.5f;
-	y += 0.5f;
-
 	/* Do it! */
 	areatex_sample_level_zero(areatex_diag, x, y, weights);
 }
@@ -732,10 +728,6 @@ void SMAABlendingWeightCalculationOperation::area(int d1, int d2, int e1, int e2
 	/* The areas texture is compressed  quadratically: */
 	float x = (float)(SMAA_AREATEX_MAX_DISTANCE * e1) + sqrtf((float)d1);
 	float y = (float)(SMAA_AREATEX_MAX_DISTANCE * e2) + sqrtf((float)d2);
-
-	/* We do a bias for mapping to texel space: */
-	x += 0.5f;
-	y += 0.5f;
 
 	/* Do it! */
 	areatex_sample_level_zero(areatex, x, y, weights);
