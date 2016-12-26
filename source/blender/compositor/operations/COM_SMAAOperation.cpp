@@ -365,8 +365,8 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 	/* Edge at north */
 	if (edges[1] > 0.0f) {
 		if (m_config.diag) {
-			/* Diagonals have both north and west edges, so searching for them in */
-			/* one of the boundaries is enough. */
+			/* Diagonals have both north and west edges, so calculating weights for them */
+			/* in one of the boundaries is enough. */
 			calculateDiagWeights(x, y, edges, output);
 
 			/* We give priority to diagonals, so if we find a diagonal we skip  */
@@ -406,6 +406,10 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 
 	/* Edge at west */
 	if (edges[0] > 0.0f) {
+		/* Did we already do diagonal search for this west edge from the left neighboring pixel? */
+		if (m_config.diag && isVerticalSearchUnneeded(x, y))
+			return;
+
 		/* Find the distance to the top and the bottom: */
 		int top = searchYUp(x, y);
 		int bottom = searchYDown(x, y);
@@ -623,6 +627,24 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 		weights[1] += w[0];
 	}
 }
+
+bool SMAABlendingWeightCalculationOperation::isVerticalSearchUnneeded(int x, int y)
+{
+	int d1, d2;
+	bool found;
+	float e[4];
+
+	/* Search for the line ends: */
+	sample(m_imageReader, x - 1, y, e);
+	if (e[1] > 0.0f)
+		d1 = x - searchDiag2(x - 1, y, -1, &found);
+	else
+		d1 = 0;
+	d2 = searchDiag2(x - 1, y, 1, &found) - x;
+
+	return (d1 + d2 > 2); /* d1 + d2 + 1 > 3 */
+}
+
 
 /*-----------------------------------------------------------------------------*/
 /* Horizontal/Vertical Search Functions */
