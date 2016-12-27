@@ -48,14 +48,14 @@
 #define SMAA_AREATEX_MAX_DISTANCE_DIAG 20
 
 /*-----------------------------------------------------------------------------*/
-/* Internal Functions to Sample Pixel Color */
+/* Internal Functions to Sample Pixel Color from Image */
 
 static inline void sample(SocketReader *reader, int x, int y, float color[4])
 {
 	reader->read(color, CLAMPIS(x, 0, reader->getWidth() - 1), CLAMPIS(y, 0, reader->getHeight() -1), NULL);
 }
 
-static void sample_level_zero_yoffset(SocketReader *reader, int x, int y, float yoffset, float color[4])
+static void sample_bilinear_vertical(SocketReader *reader, int x, int y, float yoffset, float color[4])
 {
 	float iy = floorf(yoffset);
 	float fy = yoffset - iy;
@@ -72,7 +72,7 @@ static void sample_level_zero_yoffset(SocketReader *reader, int x, int y, float 
 	color[3] = interpf(color01[3], color00[3], fy);
 }
 
-static void sample_level_zero_xoffset(SocketReader *reader, int x, int y, float xoffset, float color[4])
+static void sample_bilinear_horizontal(SocketReader *reader, int x, int y, float xoffset, float color[4])
 {
 	float ix = floorf(xoffset);
 	float fx = xoffset - ix;
@@ -89,14 +89,25 @@ static void sample_level_zero_xoffset(SocketReader *reader, int x, int y, float 
 	color[3] = interpf(color10[3], color00[3], fx);
 }
 
+/*-----------------------------------------------------------------------------*/
+/* Internal Functions to Sample Blending Weights from AreaTex */
+
 static inline const float* areatex_sample_internal(const float *areatex, int x, int y)
 {
 	return &areatex[(CLAMPIS(x, 0, SMAA_AREATEX_SIZE - 1) +
 			 CLAMPIS(y, 0, SMAA_AREATEX_SIZE - 1) * SMAA_AREATEX_SIZE) * 2];
 }
 
-static void areatex_sample_level_zero(const float *areatex, float x, float y, float weights[2])
+/**
+ * We have the distance and both crossing edges. So, what are the areas
+ * at each side of current edge?
+ */
+static void area(int d1, int d2, int e1, int e2, float weights[2])
 {
+	/* The areas texture is compressed  quadratically: */
+	float x = (float)(SMAA_AREATEX_MAX_DISTANCE * e1) + sqrtf((float)d1);
+	float y = (float)(SMAA_AREATEX_MAX_DISTANCE * e2) + sqrtf((float)d2);
+
 	float ix = floorf(x), iy = floorf(y);
 	float fx = x - ix, fy = y - iy;
 	int X = (int)ix, Y = (int)iy;
@@ -108,6 +119,19 @@ static void areatex_sample_level_zero(const float *areatex, float x, float y, fl
 
 	weights[0] = interpf(interpf(weights11[0], weights01[0], fx), interpf(weights10[0], weights00[0], fx), fy);
 	weights[1] = interpf(interpf(weights11[1], weights01[1], fx), interpf(weights10[1], weights00[1], fx), fy);
+}
+
+/**
+ * Similar to area(), this calculates the area corresponding to a certain
+ * diagonal distance and crossing edges 'e'.
+ */
+static void area_diag(int d1, int d2, int e1, int e2, float weights[2])
+{
+	int x = SMAA_AREATEX_MAX_DISTANCE_DIAG * e1 + d1;
+	int y = SMAA_AREATEX_MAX_DISTANCE_DIAG * e2 + d2;
+
+	const float *w = areatex_sample_internal(areatex_diag, x, y);
+	copy_v2_v2(weights, w);
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -515,19 +539,6 @@ int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dir, b
 }
 
 /**
- * Similar to area(), this calculates the area corresponding to a certain
- * diagonal distance and crossing edges 'e'.
- */
-void SMAABlendingWeightCalculationOperation::areaDiag(int d1, int d2, int e1, int e2, float weights[2])
-{
-	float x = (float)(SMAA_AREATEX_MAX_DISTANCE_DIAG * e1 + d1);
-	float y = (float)(SMAA_AREATEX_MAX_DISTANCE_DIAG * e2 + d2);
-
-	/* Do it! */
-	areatex_sample_level_zero(areatex_diag, x, y, weights);
-}
-
-/**
  * This searches for diagonal patterns and returns the corresponding weights.
  */
 void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, const float edges[2], float weights[2])
@@ -576,7 +587,7 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 		}
 
 		/* Fetch the areas for this line: */
-		areaDiag(d1, d2, e1, e2, weights);
+		area_diag(d1, d2, e1, e2, weights);
 	}
 
 	/* Search for the line ends: */
@@ -618,7 +629,7 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 		/* Fetch the areas for this line: */
 		float w[2];
-		areaDiag(d1, d2, e1, e2, w);
+		area_diag(d1, d2, e1, e2, w);
 		weights[0] += w[1];
 		weights[1] += w[0];
 	}
@@ -722,17 +733,6 @@ int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 
 	return y - 1;
 }
-
-void SMAABlendingWeightCalculationOperation::area(int d1, int d2, int e1, int e2, float weights[2])
-{
-	/* The areas texture is compressed  quadratically: */
-	float x = (float)(SMAA_AREATEX_MAX_DISTANCE * e1) + sqrtf((float)d1);
-	float y = (float)(SMAA_AREATEX_MAX_DISTANCE * e2) + sqrtf((float)d2);
-
-	/* Do it! */
-	areatex_sample_level_zero(areatex, x, y, weights);
-}
-
 
 /*-----------------------------------------------------------------------------*/
 /* Corner Detection Functions */
@@ -844,14 +844,14 @@ void SMAANeighborhoodBlendingOperation::executePixel(float output[4], int x, int
 	float offset1, offset2, weight1, weight2, color1[4], color2[4];
 
 	if (fmaxf(right, left) > fmaxf(bottom, top)) { /* max(horizontal) > max(vertical) */
-		samplefunc = sample_level_zero_xoffset;
+		samplefunc = sample_bilinear_horizontal;
 		offset1 = right;
 		offset2 = -left;
 		weight1 = right / (right + left);
 		weight2 = left / (right + left);
 	}
 	else {
-		samplefunc = sample_level_zero_yoffset;
+		samplefunc = sample_bilinear_vertical;
 		offset1 = bottom;
 		offset2 = -top;
 		weight1 = bottom / (bottom + top);
