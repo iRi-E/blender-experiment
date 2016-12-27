@@ -201,7 +201,7 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float L, Lleft, Ltop, Dleft, Dtop;
 	float Lright, Lbottom, Dright, Dbottom;
 	float Lleftleft, Ltoptop, Dleftleft, Dtoptop;
-	float delta_x, delta_y, finalDelta;
+	float maxDelta;
 
 	/* Calculate the threshold: */
 	if (m_config.pred)
@@ -238,27 +238,37 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	Dbottom = fabsf(L - Lbottom);
 
 	/* Calculate the maximum delta in the direct neighborhood: */
-	delta_x = fmaxf(Dleft, Dright);
-	delta_y = fmaxf(Dtop, Dbottom);
+	maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
 
-	/* Calculate left-left and top-top deltas: */
-	sample(m_imageReader, x - 2, y, color);
-	Lleftleft = IMB_colormanagement_get_luminance(color);
-	sample(m_imageReader, x, y - 2, color);
-	Ltoptop   = IMB_colormanagement_get_luminance(color);
-	Dleftleft = fabsf(Lleft - Lleftleft);
-	Dtoptop   = fabsf(Ltop - Ltoptop);
+	/* Left edge */
+	if (output[0] != 0.0f) {
+		/* Calculate left-left delta: */
+		sample(m_imageReader, x - 2, y, color);
+		Lleftleft = IMB_colormanagement_get_luminance(color);
+		Dleftleft = fabsf(Lleft - Lleftleft);
 
-	/* Calculate the final maximum delta: */
-	delta_x = fmaxf(delta_x, Dleftleft);
-	delta_y = fmaxf(delta_y, Dtoptop);
-	finalDelta = fmaxf(delta_x, delta_y);
+		/* Calculate the final maximum delta: */
+		maxDelta = fmaxf(maxDelta, Dleftleft);
 
-	/* Local contrast adaptation: */
-	if (finalDelta > m_config.adapt_fac * Dleft)
-		output[0] =  0.0f;
-	if (finalDelta > m_config.adapt_fac * Dtop)
-		output[1] =  0.0f;
+		/* Local contrast adaptation: */
+		if (maxDelta > m_config.adapt_fac * Dleft)
+			output[0] =  0.0f;
+	}
+
+	/* Top edge */
+	if (output[1] != 0.0f) {
+		/* Calculate top-top delta: */
+		sample(m_imageReader, x, y - 2, color);
+		Ltoptop = IMB_colormanagement_get_luminance(color);
+		Dtoptop = fabsf(Ltop - Ltoptop);
+
+		/* Calculate the final maximum delta: */
+		maxDelta = fmaxf(maxDelta, Dtoptop);
+
+		/* Local contrast adaptation: */
+		if (maxDelta > m_config.adapt_fac * Dtop)
+			output[1] =  0.0f;
+	}
 }
 
 /* Color Edge Detection */
@@ -274,7 +284,7 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	float C[4], Cleft[4], Ctop[4], Dleft, Dtop;
 	float Cright[4], Cbottom[4], Dright, Dbottom;
 	float Cleftleft[4], Ctoptop[4], Dleftleft, Dtoptop;
-	float delta_x, delta_y, finalDelta;
+	float maxDelta;
 
 	/* Calculate the threshold: */
 	if (m_config.pred)
@@ -306,25 +316,36 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	Dbottom = color_delta(C, Cbottom);
 
 	/* Calculate the maximum delta in the direct neighborhood: */
-	delta_x = fmaxf(Dleft, Dright);
-	delta_y = fmaxf(Dtop, Dbottom);
+	maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
 
-	/* Calculate left-left and top-top deltas: */
-	sample(m_imageReader, x - 2, y, Cleftleft);
-	sample(m_imageReader, x, y - 2, Ctoptop);
-	Dleftleft = color_delta(Cleft, Cleftleft);
-	Dtoptop   = color_delta(Ctop, Ctoptop);
+	/* Left edge */
+	if (output[0] != 0.0f) {
+		/* Calculate left-left delta: */
+		sample(m_imageReader, x - 2, y, Cleftleft);
+		Dleftleft = color_delta(Cleft, Cleftleft);
 
-	/* Calculate the final maximum delta: */
-	delta_x = fmaxf(delta_x, Dleftleft);
-	delta_y = fmaxf(delta_y, Dtoptop);
-	finalDelta = fmaxf(delta_x, delta_y);
+		/* Calculate the final maximum delta: */
+		maxDelta = fmaxf(maxDelta, Dleftleft);
 
-	/* Local contrast adaptation: */
-	if (finalDelta > m_config.adapt_fac * Dleft)
-		output[0] =  0.0f;
-	if (finalDelta > m_config.adapt_fac * Dtop)
-		output[1] =  0.0f;
+		/* Local contrast adaptation: */
+		if (maxDelta > m_config.adapt_fac * Dleft)
+			output[0] =  0.0f;
+	}
+
+	/* Top edge */
+	if (output[1] != 0.0f) {
+		/* Calculate top-top delta: */
+		sample(m_imageReader, x, y - 2, Ctoptop);
+		Dtoptop = color_delta(Ctop, Ctoptop);
+
+		/* Calculate the final maximum delta: */
+		maxDelta = fmaxf(maxDelta, Dtoptop);
+
+		/* Local contrast adaptation: */
+		if (maxDelta > m_config.adapt_fac * Dtop)
+			output[1] =  0.0f;
+	}
+
 }
 
 /* Depth Edge Detection */
