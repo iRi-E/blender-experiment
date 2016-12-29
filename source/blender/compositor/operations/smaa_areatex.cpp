@@ -2,16 +2,14 @@
  * Copyright (C) 2016 IRIE Shinsuke
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to
- * do so, subject to the following conditions:
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software. As clarification, there
- * is no requirement that the copyright notice and permission be included in
- * binary distributions of the Software.
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,19 +20,23 @@
  * SOFTWARE.
  */
 
+/*
+ * smaa_areatex.cpp  version 0.2.0
+ *
+ * This is a part of smaa-cpp that is an implementation of
+ * Enhanced Subpixel Morphological Antialiasing (SMAA) written in C++.
+ *
+ * This program is C++ rewrite of AreaTex.py included in the original
+ * SMAA ditribution:
+ *
+ *   https://github.com/iryoku/smaa/tree/master/Scripts
+ */
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 #include <cmath>
-
-/**
- * smaa_areatex.cpp  version 0.1
- *
- * This program is C++ rewrite of AreaTex.py included in SMAA ditribution.
- *
- *   SMAA in GitHub: https://github.com/iryoku/smaa
- */
 
 /*------------------------------------------------------------------------------*/
 /* Type Definitions */
@@ -81,50 +83,46 @@ Dbl2::operator Int2() { return Int2((int)x, (int)y); }
 /*------------------------------------------------------------------------------*/
 /* Data to Calculate Areatex */
 
-static const double subsample_offsets_ortho[] = {0.0,    /* 0 */
-						 -0.25,  /* 1 */
-						 0.25,   /* 2 */
-						 -0.125, /* 3 */
-						 0.125,  /* 4 */
-						 -0.375, /* 5 */
-						 0.375}; /* 6 */
-
-static const Dbl2 subsample_offsets_diag[] = {{ 0.00,   0.00},   /* 0 */
-					      { 0.25,  -0.25},   /* 1 */
-					      {-0.25,   0.25},   /* 2 */
-					      { 0.125, -0.125},  /* 3 */
-					      {-0.125,  0.125}}; /* 4 */
-
 /* Texture sizes: */
 /* (it's quite possible that this is not easily configurable) */
-#define SIZE_ORTHO 16 /* 16 * 5 slots = 80 */
-#define SIZE_DIAG  20 /* 20 * 4 slots = 80 */
+static const int SUBSAMPLES_ORTHO = 7;
+static const int SUBSAMPLES_DIAG  = 5;
+static const int MAX_DIST_ORTHO_COMPAT = 16;
+static const int MAX_DIST_ORTHO = 20;
+static const int MAX_DIST_DIAG  = 20;
+static const int TEX_SIZE_ORTHO = 80; /* 16 * 5 slots = 80 */
+static const int TEX_SIZE_DIAG  = 80; /* 20 * 4 slots = 80 */
 
 /* Number of samples for calculating areas in the diagonal textures: */
 /* (diagonal areas are calculated using brute force sampling) */
-#define SAMPLES_DIAG 30
+static const int SAMPLES_DIAG = 30;
 
 /* Maximum distance for smoothing u-shapes: */
-#define SMOOTH_MAX_DISTANCE 32
+static const int SMOOTH_MAX_DISTANCE = 32;
 
 /*------------------------------------------------------------------------------*/
-/* Miscellaneous Utility Functions */
+/* Offset Tables */
 
-/* Linear interpolation: */
-static Dbl2 lerp(Dbl2 a, Dbl2 b, double p)
-{
-	return a + (b - a) * Dbl2(p);
-}
+/* Offsets for subsample rendering */
+static const double subsample_offsets_ortho[SUBSAMPLES_ORTHO] = {
+	0.0,    /* 0 */
+	-0.25,  /* 1 */
+	0.25,   /* 2 */
+	-0.125, /* 3 */
+	0.125,  /* 4 */
+	-0.375, /* 5 */
+	0.375   /* 6 */
+};
 
-/* Saturates a value to [0..1] range: */
-static double saturate(double x)
-{
-	return 0.0 < x ? (x < 1.0 ? x : 1.0) : 0.0;
-}
+static const Dbl2 subsample_offsets_diag[SUBSAMPLES_DIAG] = {
+	{ 0.00,   0.00},  /* 0 */
+	{ 0.25,  -0.25},  /* 1 */
+	{-0.25,   0.25},  /* 2 */
+	{ 0.125, -0.125}, /* 3 */
+	{-0.125,  0.125}  /* 4 */
+};
 
-/*------------------------------------------------------------------------------*/
-/* Mapping Tables (for placing each pattern subtexture into its place) */
-
+/* Mapping offsets for placing each pattern subtexture into its place */
 enum edgesorthoIndices
 {
 	EDGESORTHO_NONE_NONE = 0,
@@ -145,8 +143,15 @@ enum edgesorthoIndices
 	EDGESORTHO_BOTH_BOTH = 15,
 };
 
-static const Int2 edgesortho[] = {{0, 0}, {0, 1}, {0, 3}, {0, 4}, {1, 0}, {1, 1}, {1, 3}, {1, 4},
-				  {3, 0}, {3, 1}, {3, 3}, {3, 4}, {4, 0}, {4, 1}, {4, 3}, {4, 4}};
+static const Int2 edgesortho_compat[16] = {
+	{0, 0}, {0, 1}, {0, 3}, {0, 4}, {1, 0}, {1, 1}, {1, 3}, {1, 4},
+	{3, 0}, {3, 1}, {3, 3}, {3, 4}, {4, 0}, {4, 1}, {4, 3}, {4, 4}
+};
+
+static const Int2 edgesortho[16] = {
+	{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 0}, {1, 1}, {1, 2}, {1, 3},
+	{2, 0}, {2, 1}, {2, 2}, {2, 3}, {3, 0}, {3, 1}, {3, 2}, {3, 3}
+};
 
 enum edgesdiagIndices
 {
@@ -168,14 +173,55 @@ enum edgesdiagIndices
 	EDGESDIAG_BOTH_BOTH = 15,
 };
 
-static const Int2 edgesdiag[]  = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 0}, {1, 1}, {1, 2}, {1, 3},
-				  {2, 0}, {2, 1}, {2, 2}, {2, 3}, {3, 0}, {3, 1}, {3, 2}, {3, 3}};
+static const Int2 edgesdiag[16] = {
+	{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 0}, {1, 1}, {1, 2}, {1, 3},
+	{2, 0}, {2, 1}, {2, 2}, {2, 3}, {3, 0}, {3, 1}, {3, 2}, {3, 3}
+};
+
+/*------------------------------------------------------------------------------*/
+/* Miscellaneous Utility Functions */
+
+/* Linear interpolation: */
+static Dbl2 lerp(Dbl2 a, Dbl2 b, double p)
+{
+	return a + (b - a) * Dbl2(p);
+}
+
+/* Saturates a value to [0..1] range: */
+static double saturate(double x)
+{
+	return 0.0 < x ? (x < 1.0 ? x : 1.0) : 0.0;
+}
 
 /*------------------------------------------------------------------------------*/
 /* Horizontal/Vertical Areas */
 
+class AreaOrtho {
+	double m_data[SUBSAMPLES_ORTHO][TEX_SIZE_ORTHO][TEX_SIZE_ORTHO][2];
+	bool m_compat;
+public:
+	AreaOrtho(bool compat) : m_compat(compat) {}
+
+	double *getData() { return (double *)&m_data; }
+	Dbl2 getPixel(int offset_index, Int2 coords) {
+		return Dbl2(m_data[offset_index][coords.y][coords.x][0],
+			    m_data[offset_index][coords.y][coords.x][1]);
+	}
+
+	void areatex(int offset_index);
+private:
+	void putPixel(int offset_index, Int2 coords, Dbl2 pixel) {
+		m_data[offset_index][coords.y][coords.x][0] = pixel.x;
+		m_data[offset_index][coords.y][coords.x][1] = pixel.y;
+	}
+
+	Dbl2 smootharea(double d, Dbl2 a1, Dbl2 a2);
+	Dbl2 area(Dbl2 p1, Dbl2 p2, int x);
+	Dbl2 calculate(int pattern, int left, int right, double offset);
+};
+
 /* Smoothing function for small u-patterns: */
-static Dbl2 smootharea(double d, Dbl2 a1, Dbl2 a2)
+Dbl2 AreaOrtho::smootharea(double d, Dbl2 a1, Dbl2 a2)
 {
 	Dbl2 b1 = (a1 * Dbl2(2.0)).apply(sqrt) * Dbl2(0.5);
 	Dbl2 b2 = (a2 * Dbl2(2.0)).apply(sqrt) * Dbl2(0.5);;
@@ -184,15 +230,16 @@ static Dbl2 smootharea(double d, Dbl2 a1, Dbl2 a2)
 }
 
 /* Calculates the area under the line p1->p2, for the pixel x..x+1: */
-static Dbl2 area(Dbl2 p1, Dbl2 p2, int x)
+Dbl2 AreaOrtho::area(Dbl2 p1, Dbl2 p2, int x)
 {
-	Dbl2 d = {p2.x - p1.x, p2.y - p1.y};
+	Dbl2 d = p2 - p1;
 	double x1 = (double)x;
-	double x2 = x + 1.0;
-	double y1 = p1.y + d.y * (x1 - p1.x) / d.x;
-	double y2 = p1.y + d.y * (x2 - p1.x) / d.x;
+	double x2 = x1 + 1.0;
 
 	if ((x1 >= p1.x && x1 < p2.x) || (x2 > p1.x && x2 <= p2.x)) { /* inside? */
+		double y1 = p1.y + (x1 - p1.x) * d.y / d.x;
+		double y2 = p1.y + (x2 - p1.x) * d.y / d.x;
+
 		if ((copysign(1.0, y1) == copysign(1.0, y2) ||
 		     fabs(y1) < 1e-4 || fabs(y2) < 1e-4)) { /* trapezoid? */
 			double a = (y1 + y2) / 2.0;
@@ -202,7 +249,7 @@ static Dbl2 area(Dbl2 p1, Dbl2 p2, int x)
 				return Dbl2(0.0, fabs(a));
 		}
 		else { /* Then, we got two triangles: */
-			double x = -p1.y * d.x / d.y + p1.x, xi;
+			double x = p1.x - p1.y * d.x / d.y, xi;
 			double a1 = x > p1.x ? y1 * modf(x, &xi) / 2.0 : 0.0;
 			double a2 = x < p2.x ? y2 * (1.0 - modf(x, &xi)) / 2.0 : 0.0;
 			double a = fabs(a1) > fabs(a2) ? a1 : -a2;
@@ -218,7 +265,7 @@ static Dbl2 area(Dbl2 p1, Dbl2 p2, int x)
 
 /* Calculates the area for a given pattern and distances to the left and to the */
 /* right, biased by an offset: */
-static Dbl2 areaortho(int pattern, int left, int right, double offset)
+Dbl2 AreaOrtho::calculate(int pattern, int left, int right, double offset)
 {
 	Dbl2 a1, a2;
 
@@ -443,53 +490,131 @@ static Dbl2 areaortho(int pattern, int left, int right, double offset)
 /*------------------------------------------------------------------------------*/
 /* Diagonal Areas */
 
-static bool inside(Dbl2 p1, Dbl2 p2, Dbl2 p)
-{
-	if (p1.x != p2.x || p1.y != p2.y) {
-		double x = p.x, y = p.y;
-		double xm = (p1.x + p2.x) / 2.0, ym = (p1.y + p2.y) / 2.0;
-		double a = p2.y - p1.y;
-		double b = p1.x - p2.x;
-		return (a * (x - xm) + b * (y - ym) > 0);
+class AreaDiag {
+	double m_data[SUBSAMPLES_DIAG][TEX_SIZE_DIAG][TEX_SIZE_DIAG][2];
+	bool m_numeric;
+public:
+	AreaDiag(bool numeric) : m_numeric(numeric) {}
+
+	double *getData() { return (double *)&m_data; }
+	Dbl2 getPixel(int offset_index, Int2 coords) {
+		return Dbl2(m_data[offset_index][coords.y][coords.x][0],
+			    m_data[offset_index][coords.y][coords.x][1]);
 	}
-	else
-                return true;
-}
+
+	void areatex(int offset_index);
+private:
+	void putPixel(int offset_index, Int2 coords, Dbl2 pixel) {
+		m_data[offset_index][coords.y][coords.x][0] = pixel.x;
+		m_data[offset_index][coords.y][coords.x][1] = pixel.y;
+	}
+
+	double area1(Dbl2 p1, Dbl2 p2, Int2 p);
+	Dbl2 area(int pattern, Dbl2 p1, Dbl2 p2, int left, Dbl2 offset);
+	Dbl2 calculate(int pattern, int left, int right, Dbl2 offset);
+};
 
 /* Calculates the area under the line p1->p2 for the pixel 'p' using brute */
 /* force sampling: */
 /* (quick and dirty solution, but it works) */
-static double area1(Dbl2 p1, Dbl2 p2, Int2 p)
+double AreaDiag::area1(Dbl2 p1, Dbl2 p2, Int2 p)
 {
-	int a = 0;
+	if (p1.x == p2.x && p1.y == p2.y)
+		return 1.0;
 
-	for (int x = 0; x < SAMPLES_DIAG; x++) {
-		for (int y = 0; y < SAMPLES_DIAG; y++) {
-			if (inside(p1, p2, Dbl2((double)p.x + (double)x / (double)(SAMPLES_DIAG - 1),
-						(double)p.y + (double)y / (double)(SAMPLES_DIAG - 1))))
-				a++;
+	double xm = (p1.x + p2.x) / 2.0, ym = (p1.y + p2.y) / 2.0;
+	double a = p2.y - p1.y;
+	double b = p1.x - p2.x;
+	int count = 0;
+
+	for (int ix = 0; ix < SAMPLES_DIAG; ix++) {
+		double x = p.x + (double)ix / (double)(SAMPLES_DIAG - 1);
+		for (int iy = 0; iy < SAMPLES_DIAG; iy++) {
+			double y = p.y + (double)iy / (double)(SAMPLES_DIAG - 1);
+			if (a * (x - xm) + b * (y - ym) > 0.0) /* inside? */
+				count++;
 		}
 	}
-	return (double)a / (double)(SAMPLES_DIAG * SAMPLES_DIAG);
+	return (double)count / (double)(SAMPLES_DIAG * SAMPLES_DIAG);
 }
 
 /* Calculates the area under the line p1->p2: */
 /* (includes the pixel and its opposite) */
-static Dbl2 area(int pattern, Dbl2 p1, Dbl2 p2, int left, Dbl2 offset)
+Dbl2 AreaDiag::area(int pattern, Dbl2 p1, Dbl2 p2, int left, Dbl2 offset)
 {
 	Int2 e = edgesdiag[pattern];
 	if (e.x > 0)
 		p1 += offset;
 	if (e.y > 0)
 		p2 += offset;
-	double a1 = area1(p1, p2, Int2(1, 0) + Int2(left));
-	double a2 = area1(p1, p2, Int2(1, 1) + Int2(left));
-	return Dbl2(1.0 - a1, a2);
+
+	if (m_numeric) {
+		double a1 = area1(p1, p2, Int2(1, 0) + Int2(left));
+		double a2 = area1(p1, p2, Int2(1, 1) + Int2(left));
+		return Dbl2(1.0 - a1, a2);
+	}
+
+	/* Calculates the area under the line p1->p2 for the pixel 'p' analytically */
+	Dbl2 d = p2 - p1;
+	if (d.x == 0.0)
+		return Dbl2(0.0, 1.0);
+
+	double x1 = (double)(1 + left);
+	double x2 = x1 + 1.0;
+	double y1 = p1.y + (x1 - p1.x) * d.y / d.x;
+	double y2 = p1.y + (x2 - p1.x) * d.y / d.x;
+	double fy1 = y1 - floor(y1);
+	double fy2 = y2 - floor(y2);
+	double xtop = p1.x + (x2 - p1.y) * d.x / d.y;
+	double xmid = p1.x + (x1 - p1.y) * d.x / d.y;
+	double xbot = p1.x + ((x1 - 1.0) - p1.y) * d.x / d.y;
+	int iy1 = (int)floor(y1 - x1), iy2 = (int)floor(y2 - x2);
+
+	if (iy1 <= -2) {
+		if (iy2 == -2)
+			return Dbl2(1.0 - (x2 - xbot) * fy2 * 0.5, 0.0);
+		else if (iy2 == -1)
+			return Dbl2((xmid + xbot) * 0.5 - x1, (x2 - xmid) * fy2 * 0.5);
+		else if (iy2 >= 0)
+			return Dbl2((xmid + xbot) * 0.5 - x1, x2 -  (xtop + xmid) * 0.5);
+		else /* iy2 < -2 */
+			return Dbl2(1.0, 0.0);
+	}
+	else if (iy1 == -1) {
+		if (iy2 == -2)
+			return Dbl2(1.0 - (fy1 + fy2) * 0.5, 0.0);
+		else if (iy2 == -1)
+			return Dbl2((xmid - x1) * (1.0 - fy1) * 0.5, (x2 - xmid) * fy2 * 0.5);
+		else if (iy2 >= 0)
+			return Dbl2((xmid - x1) * (1.0 - fy1) * 0.5, x2 - (xtop + xmid) * 0.5);
+		else /* iy2 < -2 */
+			return Dbl2(1.0 - (xbot - x1) * fy1 * 0.5, 0.0);
+	}
+	else if (iy1 == 0) {
+		if (iy2 == -2)
+			return Dbl2((x2 - xmid) * (1.0 - fy2) * 0.5, (xmid - x1) * fy1 * 0.5);
+		else if (iy2 == -1)
+			return Dbl2(0.0, (fy1 + fy2) * 0.5);
+		else if (iy2 >= 0)
+			return Dbl2(0.0, 1.0 - (xtop - x1) * (1.0 - fy1) * 0.5);
+		else /* iy2 < -2 */
+			return Dbl2(x2 - (xmid + xbot) * 0.5, (xmid - x1) * fy1 * 0.5);
+	}
+	else { /* iy1 > 0 */
+		if (iy2 == -2)
+			return Dbl2((x2 - xtop) * (1.0 - fy2) * 0.5, (xtop + xmid) * 0.5 - x1);
+		else if (iy2 == -1)
+			return Dbl2(0.0, 1.0 - (x1 - xtop) * (1.0 - fy2) * 0.5);
+		else if (iy2 >= 0)
+			return Dbl2(0.0, 1.0);
+		else /* iy2 < -2 */
+			return Dbl2(x2 - (xmid + xbot) * 0.5, (xtop + xmid) * 0.5 - x1);
+	}
 }
 
 /* Calculates the area for a given pattern and distances to the left and to the */
 /* right, biased by an offset: */
-static Dbl2 areadiag(int pattern, int left, int right, Dbl2 offset)
+Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
 {
 	Dbl2 a1, a2;
 
@@ -759,42 +884,37 @@ static Dbl2 areadiag(int pattern, int left, int right, Dbl2 offset)
 /*------------------------------------------------------------------------------*/
 /* Main Loops */
 
-/* Buffers to Store AreaTex Data Temporarily */
-static double ortho[7][5 * SIZE_ORTHO][5 * SIZE_ORTHO][2];
-static double diag[5][4 * SIZE_DIAG][4 * SIZE_DIAG][2];
-
-static void areatex_ortho(int offset_index)
+void AreaOrtho::areatex(int offset_index)
 {
 	double offset = subsample_offsets_ortho[offset_index];
+	int max_dist = m_compat ? MAX_DIST_ORTHO_COMPAT : MAX_DIST_ORTHO;
 
 	for (int pattern = 0; pattern < 16; pattern++) {
-		Int2 e = Int2(SIZE_ORTHO) * edgesortho[pattern];
-		for (int left = 0; left < SIZE_ORTHO; left++) {
-			for (int right = 0; right < SIZE_ORTHO; right++) {
-				Dbl2 p = areaortho(pattern, left * left, right * right, offset);
+		Int2 e = Int2(max_dist) * (m_compat ? edgesortho_compat : edgesortho)[pattern];
+		for (int left = 0; left < max_dist; left++) {
+			for (int right = 0; right < max_dist; right++) {
+				Dbl2 p = calculate(pattern, left * left, right * right, offset);
 				Int2 coords = e + Int2(left, right);
 
-				ortho[offset_index][coords.y][coords.x][0] = p.x;
-				ortho[offset_index][coords.y][coords.x][1] = p.y;
+				putPixel(offset_index, coords, p);
 			}
 		}
 	}
 	return;
 }
 
-static void areatex_diag(int offset_index)
+void AreaDiag::areatex(int offset_index)
 {
 	Dbl2 offset = subsample_offsets_diag[offset_index];
 
 	for (int pattern = 0; pattern < 16; pattern++) {
-		Int2 e = Int2(SIZE_DIAG) * edgesdiag[pattern];
-		for (int left = 0; left < SIZE_DIAG; left++) {
-			for (int right = 0; right < SIZE_DIAG; right++) {
-				Dbl2 p = areadiag(pattern, left, right, offset);
+		Int2 e = Int2(MAX_DIST_DIAG) * edgesdiag[pattern];
+		for (int left = 0; left < MAX_DIST_DIAG; left++) {
+			for (int right = 0; right < MAX_DIST_DIAG; right++) {
+				Dbl2 p = calculate(pattern, left, right, offset);
 				Int2 coords = e + Int2(left, right);
 
-				diag[offset_index][coords.y][coords.x][0] = p.x;
-				diag[offset_index][coords.y][coords.x][1] = p.y;
+				putPixel(offset_index, coords, p);
 			}
 		}
 	}
@@ -823,25 +943,25 @@ static void write_double_array(FILE *fp, const double *ptr, int length, const ch
 	fprintf(fp, "\n};\n");
 }
 
-static void write_csource(FILE *fp, bool subsampling, bool quantize)
+static void write_csource(AreaOrtho *ortho, AreaDiag *diag, FILE *fp, bool subsampling, bool quantize)
 {
 	fprintf(fp, "/* This file was generated by smaa_areatex.cpp */\n");
 
 	fprintf(fp, "\n/* Horizontal/Vertical Areas */\n");
-	write_double_array(fp, (double *)ortho,
-			   (5 * SIZE_ORTHO) * (5 * SIZE_ORTHO) * 2 * (subsampling ? 7 : 1),
+	write_double_array(fp, ortho->getData(),
+			   TEX_SIZE_ORTHO * TEX_SIZE_ORTHO * 2 * (subsampling ? SUBSAMPLES_ORTHO : 1),
 			   "areatex", quantize);
 
 	fprintf(fp, "\n/* Diagonal Areas */\n");
-	write_double_array(fp, (double *)diag,
-			   (4 * SIZE_DIAG) * (4 * SIZE_DIAG) * 2 * (subsampling ? 5 : 1),
+	write_double_array(fp, diag->getData(),
+			   TEX_SIZE_DIAG * TEX_SIZE_DIAG * 2 * (subsampling ? SUBSAMPLES_DIAG : 1),
 			   "areatex_diag", quantize);
 }
 
 /* .tga File (RGBA 32bit uncompressed) */
-static void write_tga(FILE *fp, bool subsampling)
+static void write_tga(AreaOrtho *ortho, AreaDiag *diag, FILE *fp, bool subsampling)
 {
-	int samples = subsampling ? 7 : 1;
+	int subsamples = subsampling ? SUBSAMPLES_ORTHO : 1;
 	unsigned char header[18] = {0, 0,
 				    2,   /* uncompressed RGB */
 				    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -849,30 +969,32 @@ static void write_tga(FILE *fp, bool subsampling)
 				    8};  /* 8bit alpha, left to right, bottom to top */
 
 	/* Set width and height */
-	header[12] = (5 * SIZE_ORTHO + 4 * SIZE_DIAG)      & 0xff;
-	header[13] = (5 * SIZE_ORTHO + 4 * SIZE_DIAG >> 8) & 0xff;
-	header[14] = (samples * 5 * SIZE_ORTHO)      & 0xff;
-	header[15] = (samples * 5 * SIZE_ORTHO >> 8) & 0xff;
+	header[12] = (TEX_SIZE_ORTHO + TEX_SIZE_DIAG)      & 0xff;
+	header[13] = ((TEX_SIZE_ORTHO + TEX_SIZE_DIAG) >> 8) & 0xff;
+	header[14] = (subsamples * TEX_SIZE_ORTHO)      & 0xff;
+	header[15] = ((subsamples * TEX_SIZE_ORTHO) >> 8) & 0xff;
 
 	/* Write .tga header */
 	fwrite(header, sizeof(unsigned char), sizeof(header) / sizeof(unsigned char), fp);
 
 	/* Write pixel data  */
-	for (int i = samples - 1; i >= 0; i--) {
-		for (int y = 5 * SIZE_ORTHO - 1; y >= 0; y--) {
-			for (int x = 0; x < 5 * SIZE_ORTHO; x++) {
-				fputc(0, fp);                                          /* B */
-				fputc((unsigned char)(ortho[i][y][x][1] * 255.0), fp); /* G */
-				fputc((unsigned char)(ortho[i][y][x][0] * 255.0), fp); /* R */
-				fputc(0, fp);                                          /* A */
+	for (int i = subsamples - 1; i >= 0; i--) {
+		for (int y = TEX_SIZE_ORTHO - 1; y >= 0; y--) {
+			for (int x = 0; x < TEX_SIZE_ORTHO; x++) {
+				Dbl2 p = ortho->getPixel(i, Int2(x, y));
+				fputc(0, fp);                            /* B */
+				fputc((unsigned char)(p.y * 255.0), fp); /* G */
+				fputc((unsigned char)(p.x * 255.0), fp); /* R */
+				fputc(0, fp);                            /* A */
 			}
 
-			for (int x = 0; x < 4 * SIZE_DIAG; x++) {
-				if (i < 5) {
-					fputc(0, fp);                                         /* B */
-					fputc((unsigned char)(diag[i][y][x][1] * 255.0), fp); /* G */
-					fputc((unsigned char)(diag[i][y][x][0] * 255.0), fp); /* R */
-					fputc(0, fp);                                         /* A */
+			for (int x = 0; x < TEX_SIZE_DIAG; x++) {
+				if (i < SUBSAMPLES_DIAG) {
+					Dbl2 p = diag->getPixel(i, Int2(x, y));
+					fputc(0, fp);                            /* B */
+					fputc((unsigned char)(p.y * 255.0), fp); /* G */
+					fputc((unsigned char)(p.x * 255.0), fp); /* R */
+					fputc(0, fp);                            /* A */
 				}
 				else {
 					fputc(0, fp);
@@ -885,7 +1007,7 @@ static void write_tga(FILE *fp, bool subsampling)
 	}
 }
 
-static int generate_file(const char *path, bool subsampling, bool quantize, bool tga)
+static int generate_file(AreaOrtho *ortho, AreaDiag *diag, const char *path, bool subsampling, bool quantize, bool tga)
 {
 	FILE *fp = fopen(path, tga ? "wb" : "w");
 
@@ -897,9 +1019,9 @@ static int generate_file(const char *path, bool subsampling, bool quantize, bool
 	fprintf(stderr, "Generating %s\n", path);
 
 	if (tga)
-		write_tga(fp, subsampling);
+		write_tga(ortho, diag, fp, subsampling);
 	else
-		write_csource(fp, subsampling, quantize);
+		write_csource(ortho, diag, fp, subsampling, quantize);
 
 	fclose(fp);
 
@@ -911,40 +1033,92 @@ int main(int argc, char **argv)
 	bool subsampling = false;
 	bool quantize = false;
 	bool tga = false;
-	char *outfile;
+	bool compat = false;
+	bool numeric = false;
+	bool help = false;
+	char *outfile = NULL;
 	int status = 0;
 
-	for (int i = 1; i < argc - 1; i++) {
-		if (strcmp(argv[i], "-s") == 0)
-			subsampling = true;
-		else if (strcmp(argv[i], "-q") == 0)
-			quantize = true;
-		else if (strcmp(argv[i], "-t") == 0)
-			tga = true;
-		else {
-			fprintf(stderr, "Unknown option: %s\n", argv[i]);
+	for (int i = 1; i < argc; i++) {
+		char *ptr = argv[i];
+		if (*ptr++ == '-' && *ptr != '\0') {
+			char c;
+			while ((c = *ptr++) != '\0') {
+				if (c == 's')
+					subsampling = true;
+				else if (c == 'q')
+					quantize = true;
+				else if (c == 't')
+					tga = true;
+				else if (c == 'c')
+					compat = true;
+				else if (c == 'n')
+					numeric = true;
+				else if (c == 'h')
+					help = true;
+				else {
+					fprintf(stderr, "Unknown option: -%c\n", c);
+					status = 1;
+					break;
+				}
+			}
+		}
+		else if (outfile) {
+			fprintf(stderr, "Too much file names: %s, %s\n", outfile, argv[i]);
 			status = 1;
 		}
+		else
+			outfile = argv[i];
+
+		if (status != 0)
+			break;
 	}
 
-	if (status == 0 && argc > 1) {
-		outfile = argv[argc - 1];
+	if (status == 0 && !help && !outfile) {
+		fprintf(stderr, "File name was not specified.\n");
+		status = 1;
 	}
-	else {
+
+	if (status != 0 || help) {
 		fprintf(stderr, "Usage: %s [OPTION]... OUTFILE\n", argv[0]);
-		fprintf(stderr, "Options: -s  Calculate data for subpixel rendering\n");
-		fprintf(stderr, "         -q  Quantize data to 256 levels\n");
-		fprintf(stderr, "         -t  Write .tga file instead of C/C++ source\n");
-		return 1;
+		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "    -s    Calculate data for subpixel rendering\n");
+		fprintf(stderr, "    -q    Quantize data to 256 levels\n");
+		fprintf(stderr, "    -t    Write TGA image instead of C/C++ source\n");
+		fprintf(stderr, "    -c    Generate compatible orthogonal data that subtexture size is 16\n");
+		fprintf(stderr, "    -n    Numerically calculate diagonal data using brute force sampling\n");
+		fprintf(stderr, "    -h    Print this help and exit\n");
+		fprintf(stderr, "File name OUTFILE usually should have an extension such as .c, .h, or .tga,\n");
+		fprintf(stderr, "except for a special name '-' that means standard output.\n\n");
+		fprintf(stderr, "Example:\n");
+		fprintf(stderr, "  Generate TGA file exactly same as AreaTexDX10.tga bundled with the\n");
+		fprintf(stderr, "  original implementation:\n\n");
+		fprintf(stderr, "  $ smaa_areatex -stcn AreaTexDX10.tga\n\n");
+		return status;
 	}
+
+	AreaOrtho *ortho = new AreaOrtho(compat);
+	AreaDiag *diag = new AreaDiag(numeric);
 
 	/* Calculate areatex data */
-	for (int i = 0; i < (subsampling ? 7 : 1); i++)
-		areatex_ortho(i);
+	for (int i = 0; i < (subsampling ? SUBSAMPLES_ORTHO : 1); i++)
+		ortho->areatex(i);
 
-	for (int i = 0; i < (subsampling ? 5 : 1); i++)
-		areatex_diag(i);
+	for (int i = 0; i < (subsampling ? SUBSAMPLES_DIAG : 1); i++)
+		diag->areatex(i);
 
-	/* Generate C++ source file or .tga file */
-	return generate_file(outfile, subsampling, quantize, tga);
+	/* Generate C++ source file or .tga file, or write the data to stdout */
+	if (strcmp(outfile, "-") != 0)
+		status = generate_file(ortho, diag, outfile, subsampling, quantize, tga);
+	else if (tga)
+		write_tga(ortho, diag, stdout, subsampling);
+	else
+		write_csource(ortho, diag, stdout, subsampling, quantize);
+
+	delete ortho;
+	delete diag;
+
+	return status;
 }
+
+/* smaa_areatex.cpp ends here */
