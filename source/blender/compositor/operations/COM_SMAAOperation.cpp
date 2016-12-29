@@ -570,6 +570,9 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 	zero_v2(weights);
 
+	if (m_config.search_steps_diag <= 0)
+		return;
+
 	/* Search for the line ends: */
 	if (edges[0] > 0.0f) {
 		d1 = x - searchDiag1(x, y, -1, &d1_found);
@@ -661,6 +664,9 @@ bool SMAABlendingWeightCalculationOperation::isVerticalSearchUnneeded(int x, int
 	int d1, d2;
 	bool found;
 	float e[4];
+
+	if (m_config.search_steps_diag <= 0)
+		return false;
 
 	/* Search for the line ends: */
 	sample(m_imageReader, x - 1, y, e);
