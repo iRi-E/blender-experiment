@@ -44,7 +44,7 @@
 /* Non-Configurable Defines */
 
 #define SMAA_AREATEX_SIZE 80
-#define SMAA_AREATEX_MAX_DISTANCE 16
+#define SMAA_AREATEX_MAX_DISTANCE 20
 #define SMAA_AREATEX_MAX_DISTANCE_DIAG 20
 
 /*-----------------------------------------------------------------------------*/
@@ -432,13 +432,13 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 			e1 += 1;
 		sample(m_imageReader, left, y, c);
 		if (c[0] > 0.0)
-			e1 += 3;
+			e1 += 2;
 		sample(m_imageReader, right + 1, y - 1, c);
 		if (c[0] > 0.0)
 			e2 += 1;
 		sample(m_imageReader, right + 1, y, c);
 		if (c[0] > 0.0)
-			e2 += 3;
+			e2 += 2;
 
 		/* Ok, we know how this pattern looks like, now it is time for getting */
 		/* the actual area: */
@@ -467,13 +467,13 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 			e1 += 1;
 		sample(m_imageReader, x, top, c);
 		if (c[1] > 0.0)
-			e1 += 3;
+			e1 += 2;
 		sample(m_imageReader, x - 1, bottom + 1, c);
 		if (c[1] > 0.0)
 			e2 += 1;
 		sample(m_imageReader, x, bottom + 1, c);
 		if (c[1] > 0.0)
-			e2 += 3;
+			e2 += 2;
 
 		/* Get the area for this direction: */
 		area(d1, d2, e1, e2, output + 2); /* B, A */
