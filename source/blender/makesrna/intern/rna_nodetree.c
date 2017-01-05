@@ -6776,11 +6776,11 @@ static void def_cmp_antialiasing(StructRNA *srna)
 	RNA_def_property_ui_text(prop, "Threshold", "Threshold or sensitivity to detect edges");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
-	prop = RNA_def_property(srna, "local_contrast_adaption_factor", PROP_FLOAT, PROP_UNSIGNED);
+	prop = RNA_def_property(srna, "local_contrast_adaptation_factor", PROP_FLOAT, PROP_UNSIGNED);
 	RNA_def_property_float_sdna(prop, NULL, "adapt_fac");
 	RNA_def_property_range(prop, 0.0f, 100.0f);
 	RNA_def_property_ui_range(prop, 0.0f, 10.0f, 1.0, 3);
-	RNA_def_property_ui_text(prop, "Local Contrast Adaption Factor", "How big a crossing edge breaking current edge has contrast");
+	RNA_def_property_ui_text(prop, "Local Contrast Adaptation Factor", "How big a crossing edge breaking current edge has contrast");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
 	prop = RNA_def_property(srna, "enable_predication", PROP_BOOLEAN, PROP_NONE);
