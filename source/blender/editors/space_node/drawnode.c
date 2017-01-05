@@ -1459,7 +1459,7 @@ static void node_composit_buts_antialiasing(uiLayout *layout, bContext *UNUSED(C
 
 	if (RNA_enum_get(ptr, "edge_detection_type") != CMP_NODE_ANTIALIASING_DEPTH) {
 		uiItemR(col, ptr, "threshold", 0, NULL, ICON_NONE);
-		uiItemR(col, ptr, "local_contrast_adaption_factor", 0, NULL, ICON_NONE);
+		uiItemR(col, ptr, "local_contrast_adaptation_factor", 0, NULL, ICON_NONE);
 
 		uiItemR(col, ptr, "enable_predication", 0, NULL, ICON_NONE);
 		sub = uiLayoutColumn(col, false);
