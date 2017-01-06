@@ -198,11 +198,6 @@ void SMAAEdgeDetectionOperation::calculatePredicatedThreshold(int x, int y, floa
 void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y, void */*data*/)
 {
 	float threshold[2], color[4];
-	float L, Lleft, Ltop, Dleft, Dtop;
-	float Lright, Lbottom, Dright, Dbottom;
-	float Lleftleft, Ltoptop, Dleftleft, Dtoptop;
-	float Llefttop, Lleftbottom, Ltopright, Dlefttop, Dleftbottom, Dtopleft, Dtopright;
-	float maxDelta;
 
 	/* Calculate the threshold: */
 	if (m_config.pred)
@@ -212,13 +207,13 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate luma deltas: */
 	sample(m_imageReader, x, y, color);
-	L     = IMB_colormanagement_get_luminance(color);
+	float L     = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x - 1, y, color);
-	Lleft = IMB_colormanagement_get_luminance(color);
+	float Lleft = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x, y - 1, color);
-	Ltop  = IMB_colormanagement_get_luminance(color);
-	Dleft = fabsf(L - Lleft);
-	Dtop  = fabsf(L - Ltop);
+	float Ltop  = IMB_colormanagement_get_luminance(color);
+	float Dleft = fabsf(L - Lleft);
+	float Dtop  = fabsf(L - Ltop);
 
 	/* We do the usual threshold: */
 	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
@@ -232,29 +227,29 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 
 	/* Calculate right and bottom deltas: */
 	sample(m_imageReader, x + 1, y, color);
-	Lright  = IMB_colormanagement_get_luminance(color);
+	float Lright  = IMB_colormanagement_get_luminance(color);
 	sample(m_imageReader, x, y + 1, color);
-	Lbottom = IMB_colormanagement_get_luminance(color);
-	Dright  = fabsf(L - Lright);
-	Dbottom = fabsf(L - Lbottom);
+	float Lbottom = IMB_colormanagement_get_luminance(color);
+	float Dright  = fabsf(L - Lright);
+	float Dbottom = fabsf(L - Lbottom);
 
 	/* Calculate the maximum delta in the direct neighborhood: */
-	maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
+	float maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
 
 	/* Calculate luma used for both left and top edges: */
 	sample(m_imageReader, x - 1, y - 1, color);
-	Llefttop = IMB_colormanagement_get_luminance(color);
+	float Llefttop = IMB_colormanagement_get_luminance(color);
 
 	/* Left edge */
 	if (output[0] != 0.0f) {
 		/* Calculate deltas around the left pixel: */
 		sample(m_imageReader, x - 2, y, color);
-		Lleftleft   = IMB_colormanagement_get_luminance(color);
+		float Lleftleft   = IMB_colormanagement_get_luminance(color);
 		sample(m_imageReader, x - 1, y + 1, color);
-		Lleftbottom = IMB_colormanagement_get_luminance(color);
-		Dleftleft   = fabsf(Lleft - Lleftleft);
-		Dlefttop    = fabsf(Lleft - Llefttop);
-		Dleftbottom = fabsf(Lleft - Lleftbottom);
+		float Lleftbottom = IMB_colormanagement_get_luminance(color);
+		float Dleftleft   = fabsf(Lleft - Lleftleft);
+		float Dlefttop    = fabsf(Lleft - Llefttop);
+		float Dleftbottom = fabsf(Lleft - Lleftbottom);
 
 		/* Calculate the final maximum delta: */
 		maxDelta = fmaxf(maxDelta, fmaxf(Dleftleft, fmaxf(Dlefttop, Dleftbottom)));
@@ -268,12 +263,12 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	if (output[1] != 0.0f) {
 		/* Calculate top-top delta: */
 		sample(m_imageReader, x, y - 2, color);
-		Ltoptop   = IMB_colormanagement_get_luminance(color);
+		float Ltoptop   = IMB_colormanagement_get_luminance(color);
 		sample(m_imageReader, x + 1, y - 1, color);
-		Ltopright = IMB_colormanagement_get_luminance(color);
-		Dtoptop   = fabsf(Ltop - Ltoptop);
-		Dtopleft  = fabsf(Ltop - Llefttop);
-		Dtopright = fabsf(Ltop - Ltopright);
+		float Ltopright = IMB_colormanagement_get_luminance(color);
+		float Dtoptop   = fabsf(Ltop - Ltoptop);
+		float Dtopleft  = fabsf(Ltop - Llefttop);
+		float Dtopright = fabsf(Ltop - Ltopright);
 
 		/* Calculate the final maximum delta: */
 		maxDelta = fmaxf(maxDelta, fmaxf(Dtoptop, fmaxf(Dtopleft, Dtopright)));
@@ -294,11 +289,6 @@ static float color_delta(const float color1[4], const float color2[4])
 void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y, void */*data*/)
 {
 	float threshold[2];
-	float C[4], Cleft[4], Ctop[4], Dleft, Dtop;
-	float Cright[4], Cbottom[4], Dright, Dbottom;
-	float Cleftleft[4], Ctoptop[4], Dleftleft, Dtoptop;
-	float Clefttop[4], Cleftbottom[4], Ctopright[4], Dlefttop, Dleftbottom, Dtopleft, Dtopright;
-	float maxDelta;
 
 	/* Calculate the threshold: */
 	if (m_config.pred)
@@ -307,11 +297,12 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 		threshold[0] = threshold[1] = m_config.thresh;
 
 	/* Calculate color deltas: */
+	float C[4], Cleft[4], Ctop[4];
 	sample(m_imageReader, x, y, C);
 	sample(m_imageReader, x - 1, y, Cleft);
 	sample(m_imageReader, x, y - 1, Ctop);
-	Dleft = color_delta(C, Cleft);
-	Dtop  = color_delta(C, Ctop);
+	float Dleft = color_delta(C, Cleft);
+	float Dtop  = color_delta(C, Ctop);
 
 	/* We do the usual threshold: */
 	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
@@ -324,25 +315,28 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	    return;
 
 	/* Calculate right and bottom deltas: */
+	float Cright[4], Cbottom[4];
 	sample(m_imageReader, x + 1, y, Cright);
 	sample(m_imageReader, x, y + 1, Cbottom);
-	Dright  = color_delta(C, Cright);
-	Dbottom = color_delta(C, Cbottom);
+	float Dright  = color_delta(C, Cright);
+	float Dbottom = color_delta(C, Cbottom);
 
 	/* Calculate the maximum delta in the direct neighborhood: */
-	maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
+	float maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
 
 	/* Get color used for both left and top edges: */
+	float Clefttop[4];
 	sample(m_imageReader, x - 1, y - 1, Clefttop);
 
 	/* Left edge */
 	if (output[0] != 0.0f) {
 		/* Calculate deltas around the left pixel: */
+		float Cleftleft[4], Cleftbottom[4];
 		sample(m_imageReader, x - 2, y, Cleftleft);
 		sample(m_imageReader, x - 1, y + 1, Cleftbottom);
-		Dleftleft   = color_delta(Cleft, Cleftleft);
-		Dlefttop    = color_delta(Cleft, Clefttop);
-		Dleftbottom = color_delta(Cleft, Cleftbottom);
+		float Dleftleft   = color_delta(Cleft, Cleftleft);
+		float Dlefttop    = color_delta(Cleft, Clefttop);
+		float Dleftbottom = color_delta(Cleft, Cleftbottom);
 
 		/* Calculate the final maximum delta: */
 		maxDelta = fmaxf(maxDelta, fmaxf(Dleftleft, fmaxf(Dlefttop, Dleftbottom)));
@@ -355,11 +349,12 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	/* Top edge */
 	if (output[1] != 0.0f) {
 		/* Calculate deltas around the top pixel: */
+		float Ctoptop[4], Ctopright[4];
 		sample(m_imageReader, x, y - 2, Ctoptop);
 		sample(m_imageReader, x + 1, y - 1, Ctopright);
-		Dtoptop   = color_delta(Ctop, Ctoptop);
-		Dtopleft  = color_delta(Ctop, Clefttop);
-		Dtopright = color_delta(Ctop, Ctopright);
+		float Dtoptop   = color_delta(Ctop, Ctoptop);
+		float Dtopleft  = color_delta(Ctop, Clefttop);
+		float Dtopright = color_delta(Ctop, Ctopright);
 
 		/* Calculate the final maximum delta: */
 		maxDelta = fmaxf(maxDelta, fmaxf(Dtoptop, fmaxf(Dtopleft, Dtopright)));
@@ -872,16 +867,15 @@ void SMAANeighborhoodBlendingOperation::initExecution()
 
 void SMAANeighborhoodBlendingOperation::executePixel(float output[4], int x, int y, void*/*data*/)
 {
-	float e[4], left, top, right, bottom;
+	float w[4];
 
 	/* Fetch the blending weights for current pixel: */
-	sample(m_image2Reader, x, y, e);
-	left = e[2];
-	top  = e[0];
-	sample(m_image2Reader, x + 1, y, e);
-	right = e[3];
-	sample(m_image2Reader, x, y + 1, e);
-	bottom = e[1];
+	sample(m_image2Reader, x, y, w);
+	float left = w[2], top = w[0];
+	sample(m_image2Reader, x + 1, y, w);
+	float right = w[3];
+	sample(m_image2Reader, x, y + 1, w);
+	float bottom = w[1];
 
 	/* Is there any blending weight with a value greater than 0.0? */
 	if (right + bottom + left + top < 1e-5f) {
