@@ -201,6 +201,7 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float L, Lleft, Ltop, Dleft, Dtop;
 	float Lright, Lbottom, Dright, Dbottom;
 	float Lleftleft, Ltoptop, Dleftleft, Dtoptop;
+	float Llefttop, Lleftbottom, Ltopright, Dlefttop, Dleftbottom, Dtopleft, Dtopright;
 	float maxDelta;
 
 	/* Calculate the threshold: */
@@ -240,15 +241,23 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	/* Calculate the maximum delta in the direct neighborhood: */
 	maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
 
+	/* Calculate luma used for both left and top edges: */
+	sample(m_imageReader, x - 1, y - 1, color);
+	Llefttop = IMB_colormanagement_get_luminance(color);
+
 	/* Left edge */
 	if (output[0] != 0.0f) {
-		/* Calculate left-left delta: */
+		/* Calculate deltas around the left pixel: */
 		sample(m_imageReader, x - 2, y, color);
-		Lleftleft = IMB_colormanagement_get_luminance(color);
-		Dleftleft = fabsf(Lleft - Lleftleft);
+		Lleftleft   = IMB_colormanagement_get_luminance(color);
+		sample(m_imageReader, x - 1, y + 1, color);
+		Lleftbottom = IMB_colormanagement_get_luminance(color);
+		Dleftleft   = fabsf(Lleft - Lleftleft);
+		Dlefttop    = fabsf(Lleft - Llefttop);
+		Dleftbottom = fabsf(Lleft - Lleftbottom);
 
 		/* Calculate the final maximum delta: */
-		maxDelta = fmaxf(maxDelta, Dleftleft);
+		maxDelta = fmaxf(maxDelta, fmaxf(Dleftleft, fmaxf(Dlefttop, Dleftbottom)));
 
 		/* Local contrast adaptation: */
 		if (maxDelta > m_config.adapt_fac * Dleft)
@@ -259,11 +268,15 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	if (output[1] != 0.0f) {
 		/* Calculate top-top delta: */
 		sample(m_imageReader, x, y - 2, color);
-		Ltoptop = IMB_colormanagement_get_luminance(color);
-		Dtoptop = fabsf(Ltop - Ltoptop);
+		Ltoptop   = IMB_colormanagement_get_luminance(color);
+		sample(m_imageReader, x + 1, y - 1, color);
+		Ltopright = IMB_colormanagement_get_luminance(color);
+		Dtoptop   = fabsf(Ltop - Ltoptop);
+		Dtopleft  = fabsf(Ltop - Llefttop);
+		Dtopright = fabsf(Ltop - Ltopright);
 
 		/* Calculate the final maximum delta: */
-		maxDelta = fmaxf(maxDelta, Dtoptop);
+		maxDelta = fmaxf(maxDelta, fmaxf(Dtoptop, fmaxf(Dtopleft, Dtopright)));
 
 		/* Local contrast adaptation: */
 		if (maxDelta > m_config.adapt_fac * Dtop)
@@ -284,6 +297,7 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	float C[4], Cleft[4], Ctop[4], Dleft, Dtop;
 	float Cright[4], Cbottom[4], Dright, Dbottom;
 	float Cleftleft[4], Ctoptop[4], Dleftleft, Dtoptop;
+	float Clefttop[4], Cleftbottom[4], Ctopright[4], Dlefttop, Dleftbottom, Dtopleft, Dtopright;
 	float maxDelta;
 
 	/* Calculate the threshold: */
@@ -318,14 +332,20 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	/* Calculate the maximum delta in the direct neighborhood: */
 	maxDelta = fmaxf(fmaxf(Dleft, Dright), fmaxf(Dtop, Dbottom));
 
+	/* Get color used for both left and top edges: */
+	sample(m_imageReader, x - 1, y - 1, Clefttop);
+
 	/* Left edge */
 	if (output[0] != 0.0f) {
-		/* Calculate left-left delta: */
+		/* Calculate deltas around the left pixel: */
 		sample(m_imageReader, x - 2, y, Cleftleft);
-		Dleftleft = color_delta(Cleft, Cleftleft);
+		sample(m_imageReader, x - 1, y + 1, Cleftbottom);
+		Dleftleft   = color_delta(Cleft, Cleftleft);
+		Dlefttop    = color_delta(Cleft, Clefttop);
+		Dleftbottom = color_delta(Cleft, Cleftbottom);
 
 		/* Calculate the final maximum delta: */
-		maxDelta = fmaxf(maxDelta, Dleftleft);
+		maxDelta = fmaxf(maxDelta, fmaxf(Dleftleft, fmaxf(Dlefttop, Dleftbottom)));
 
 		/* Local contrast adaptation: */
 		if (maxDelta > m_config.adapt_fac * Dleft)
@@ -334,12 +354,15 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 
 	/* Top edge */
 	if (output[1] != 0.0f) {
-		/* Calculate top-top delta: */
+		/* Calculate deltas around the top pixel: */
 		sample(m_imageReader, x, y - 2, Ctoptop);
-		Dtoptop = color_delta(Ctop, Ctoptop);
+		sample(m_imageReader, x + 1, y - 1, Ctopright);
+		Dtoptop   = color_delta(Ctop, Ctoptop);
+		Dtopleft  = color_delta(Ctop, Clefttop);
+		Dtopright = color_delta(Ctop, Ctopright);
 
 		/* Calculate the final maximum delta: */
-		maxDelta = fmaxf(maxDelta, Dtoptop);
+		maxDelta = fmaxf(maxDelta, fmaxf(Dtoptop, fmaxf(Dtopleft, Dtopright)));
 
 		/* Local contrast adaptation: */
 		if (maxDelta > m_config.adapt_fac * Dtop)
