@@ -552,7 +552,6 @@ add_definitions(-DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
 
 set(GENSRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/operations)
 set(GENSRC ${GENSRC_DIR}/COM_SMAAAreaTexture.h)
-add_executable(smaa_areatex operations/smaa_areatex.cpp)
 add_custom_command(
 	OUTPUT ${GENSRC}
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${GENSRC_DIR}
