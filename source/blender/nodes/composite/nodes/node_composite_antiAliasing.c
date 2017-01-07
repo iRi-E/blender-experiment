@@ -35,7 +35,7 @@
 
 static bNodeSocketTemplate cmp_node_antialiasing_in[] = {
 	{   SOCK_RGBA, 1, N_("Image"),		1.0f, 1.0f, 1.0f, 1.0f},
-	{   SOCK_FLOAT, 1, N_("Depth"),		1.0f, 1.0f, 1.0f, 1.0f},
+	{   SOCK_FLOAT, 1, N_("Value"),		1.0f, 1.0f, 1.0f, 1.0f},
 	{   -1, 0, ""	}
 };
 
@@ -52,7 +52,7 @@ static void node_composit_init_antialiasing(bNodeTree *UNUSED(ntree), bNode *nod
 
 	data->detect_type = CMP_NODE_ANTIALIASING_COLOR;
 	data->thresh = 0.05f;
-	data->dept_thresh = 0.1f;
+	data->val_thresh = 0.1f;
 	data->adapt_fac = 2.0f;
 	data->corner = true;
 	data->rounding = 25;

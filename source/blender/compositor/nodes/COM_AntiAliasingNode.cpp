@@ -37,7 +37,7 @@ void AntiAliasingNode::convertToOperations(NodeConverter &converter, const Compo
 		case CMP_NODE_ANTIALIASING_COLOR:
 			operation1 = new SMAAColorEdgeDetectionOperation();
 			break;
-		case CMP_NODE_ANTIALIASING_DEPTH:
+		case CMP_NODE_ANTIALIASING_VALUE:
 			operation1 = new SMAADepthEdgeDetectionOperation();
 			break;
 	}
