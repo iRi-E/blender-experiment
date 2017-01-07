@@ -49,6 +49,8 @@
 #define SMAA_AREATEX_SIZE 80
 #define SMAA_AREATEX_MAX_DISTANCE 20
 #define SMAA_AREATEX_MAX_DISTANCE_DIAG 20
+#define SMAA_MAX_SEARCH_STEPS 362 /* 362 - 1 = 19^2 */
+#define SMAA_MAX_SEARCH_STEPS_DIAG 19
 
 /*-----------------------------------------------------------------------------*/
 /* Internal Functions to Sample Pixel Color from Image */
@@ -144,7 +146,7 @@ static void area_diag(int d1, int d2, int e1, int e2, float weights[2])
 SMAAEdgeDetectionOperation::SMAAEdgeDetectionOperation() : NodeOperation()
 {
 	this->addInputSocket(COM_DT_COLOR); /* image */
-	this->addInputSocket(COM_DT_VALUE); /* predication or depth */
+	this->addInputSocket(COM_DT_VALUE); /* depth */
 	this->addOutputSocket(COM_DT_COLOR);
 	this->setComplex(true);
 	this->m_imageReader = NULL;
@@ -176,37 +178,11 @@ bool SMAAEdgeDetectionOperation::determineDependingAreaOfInterest(rcti *input,
 	return NodeOperation::determineDependingAreaOfInterest(&newInput, readOperation, output);
 }
 
-/* Predication */
-
-void SMAAEdgeDetectionOperation::calculatePredicatedThreshold(int x, int y, float threshold[2])
-{
-	float here[4], left[4], top[4];
-
-	sample(m_valueReader, x, y, here);
-	sample(m_valueReader, x - 1, y, left);
-	sample(m_valueReader, x, y - 1, top);
-
-	copy_v2_fl(threshold, 1.0f);
-
-	if (fabsf(here[0] - left[0]) >= m_config.pred_thresh)
-		threshold[0] -= m_config.pred_str;
-	if (fabsf(here[0] - top[0]) >= m_config.pred_thresh)
-		threshold[1] -= m_config.pred_str;
-
-	mul_v2_fl(threshold, m_config.pred_scale * m_config.thresh);
-}
-
 /* Luma Edge Detection */
 
 void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y, void */*data*/)
 {
-	float threshold[2], color[4];
-
-	/* Calculate the threshold: */
-	if (m_config.pred)
-		calculatePredicatedThreshold(x, y, threshold);
-	else
-		threshold[0] = threshold[1] = m_config.thresh;
+	float color[4];
 
 	/* Calculate luma deltas: */
 	sample(m_imageReader, x, y, color);
@@ -219,8 +195,8 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float Dtop  = fabsf(L - Ltop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
-	output[1] = (Dtop >= threshold[1]) ? 1.0f : 0.0f;
+	output[0] = (Dleft >= m_config.thresh) ? 1.0f : 0.0f;
+	output[1] = (Dtop >= m_config.thresh) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 
@@ -291,14 +267,6 @@ static float color_delta(const float color1[4], const float color2[4])
 
 void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y, void */*data*/)
 {
-	float threshold[2];
-
-	/* Calculate the threshold: */
-	if (m_config.pred)
-		calculatePredicatedThreshold(x, y, threshold);
-	else
-		threshold[0] = threshold[1] = m_config.thresh;
-
 	/* Calculate color deltas: */
 	float C[4], Cleft[4], Ctop[4];
 	sample(m_imageReader, x, y, C);
@@ -308,8 +276,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	float Dtop  = color_delta(C, Ctop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= threshold[0]) ? 1.0f : 0.0f;
-	output[1] = (Dtop >= threshold[1]) ? 1.0f : 0.0f;
+	output[0] = (Dleft >= m_config.thresh) ? 1.0f : 0.0f;
+	output[1] = (Dtop >= m_config.thresh) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 
@@ -430,16 +398,14 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 
 	/* Edge at north */
 	if (edges[1] > 0.0f) {
-		if (m_config.diag) {
-			/* Diagonals have both north and west edges, so calculating weights for them */
-			/* in one of the boundaries is enough. */
-			calculateDiagWeights(x, y, edges, output);
+		/* Diagonals have both north and west edges, so calculating weights for them */
+		/* in one of the boundaries is enough. */
+		calculateDiagWeights(x, y, edges, output);
 
-			/* We give priority to diagonals, so if we find a diagonal we skip  */
-			/* horizontal/vertical processing. */
-			if (!is_zero_v2(output))
-				return;
-		}
+		/* We give priority to diagonals, so if we find a diagonal we skip  */
+		/* horizontal/vertical processing. */
+		if (!is_zero_v2(output))
+			return;
 
 		/* Find the distance to the left and the right: */
 		int left = searchXLeft(x, y);
@@ -473,7 +439,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 	/* Edge at west */
 	if (edges[0] > 0.0f) {
 		/* Did we already do diagonal search for this west edge from the left neighboring pixel? */
-		if (m_config.diag && isVerticalSearchUnneeded(x, y))
+		if (isVerticalSearchUnneeded(x, y))
 			return;
 
 		/* Find the distance to the top and the bottom: */
@@ -515,14 +481,14 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 {
 	rcti newInput;
 
-	newInput.xmax = input->xmax + max(m_config.search_steps,
-					  m_config.diag ? m_config.search_steps_diag + 1: 0);
-	newInput.xmin = input->xmin - max(max(m_config.search_steps - 1, 1),
-					  m_config.diag ? m_config.search_steps_diag + 1: 0);
-	newInput.ymax = input->ymax + max(m_config.search_steps,
-					  m_config.diag ? m_config.search_steps_diag : 0);
-	newInput.ymin = input->ymin - max(max(m_config.search_steps - 1, 1),
-					  m_config.diag ? m_config.search_steps_diag : 0);
+	newInput.xmax = input->xmax + max(SMAA_MAX_SEARCH_STEPS,
+					  SMAA_MAX_SEARCH_STEPS_DIAG + 1);
+	newInput.xmin = input->xmin - max(max(SMAA_MAX_SEARCH_STEPS - 1, 1),
+					  SMAA_MAX_SEARCH_STEPS_DIAG + 1);
+	newInput.ymax = input->ymax + max(SMAA_MAX_SEARCH_STEPS,
+					  SMAA_MAX_SEARCH_STEPS_DIAG);
+	newInput.ymin = input->ymin - max(max(SMAA_MAX_SEARCH_STEPS - 1, 1),
+					  SMAA_MAX_SEARCH_STEPS_DIAG);
 
 	return NodeOperation::determineDependingAreaOfInterest(&newInput, readOperation, output);
 }
@@ -536,7 +502,7 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 int SMAABlendingWeightCalculationOperation::searchDiag1(int x, int y, int dir, bool *found)
 {
 	float e[4];
-	int end = x + m_config.search_steps_diag * dir;
+	int end = x + SMAA_MAX_SEARCH_STEPS_DIAG * dir;
 	*found = false;
 
 	while (x != end) {
@@ -559,7 +525,7 @@ int SMAABlendingWeightCalculationOperation::searchDiag1(int x, int y, int dir, b
 int SMAABlendingWeightCalculationOperation::searchDiag2(int x, int y, int dir, bool *found)
 {
 	float e[4];
-	int end = x + m_config.search_steps_diag * dir;
+	int end = x + SMAA_MAX_SEARCH_STEPS_DIAG * dir;
 	*found = false;
 
 	while (x != end) {
@@ -591,7 +557,7 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 	zero_v2(weights);
 
-	if (m_config.search_steps_diag <= 0)
+	if (SMAA_MAX_SEARCH_STEPS_DIAG <= 0)
 		return;
 
 	/* Search for the line ends: */
@@ -686,7 +652,7 @@ bool SMAABlendingWeightCalculationOperation::isVerticalSearchUnneeded(int x, int
 	bool found;
 	float e[4];
 
-	if (m_config.search_steps_diag <= 0)
+	if (SMAA_MAX_SEARCH_STEPS_DIAG <= 0)
 		return false;
 
 	/* Search for the line ends: */
@@ -706,7 +672,7 @@ bool SMAABlendingWeightCalculationOperation::isVerticalSearchUnneeded(int x, int
 
 int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 {
-	int end = x - m_config.search_steps;
+	int end = x - SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (x > end) {
@@ -726,7 +692,7 @@ int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 {
-	int end = x + m_config.search_steps;
+	int end = x + SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (x < end) {
@@ -745,7 +711,7 @@ int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 {
-	int end = y - m_config.search_steps;
+	int end = y - SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (y > end) {
@@ -765,7 +731,7 @@ int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 {
-	int end = y + m_config.search_steps;
+	int end = y + SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (y < end) {
