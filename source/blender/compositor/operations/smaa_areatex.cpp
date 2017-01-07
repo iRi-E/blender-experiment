@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016 IRIE Shinsuke
+ * Copyright (C) 2016-2017 IRIE Shinsuke
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
  */
 
 /*
- * smaa_areatex.cpp  version 0.2.0
+ * smaa_areatex.cpp  version 0.3.0
  *
  * This is a part of smaa-cpp that is an implementation of
  * Enhanced Subpixel Morphological Antialiasing (SMAA) written in C++.
@@ -493,8 +493,9 @@ Dbl2 AreaOrtho::calculate(int pattern, int left, int right, double offset)
 class AreaDiag {
 	double m_data[SUBSAMPLES_DIAG][TEX_SIZE_DIAG][TEX_SIZE_DIAG][2];
 	bool m_numeric;
+	bool m_orig_u;
 public:
-	AreaDiag(bool numeric) : m_numeric(numeric) {}
+	AreaDiag(bool numeric, bool orig_u) : m_numeric(numeric), m_orig_u(orig_u) {}
 
 	double *getData() { return (double *)&m_data; }
 	Dbl2 getPixel(int offset_index, Int2 coords) {
@@ -561,53 +562,56 @@ Dbl2 AreaDiag::area(int pattern, Dbl2 p1, Dbl2 p2, int left, Dbl2 offset)
 
 	double x1 = (double)(1 + left);
 	double x2 = x1 + 1.0;
+	double ymid = x1;
+	double xtop = p1.x + (ymid + 1.0 - p1.y) * d.x / d.y;
+	double xmid = p1.x + (ymid       - p1.y) * d.x / d.y;
+	double xbot = p1.x + (ymid - 1.0 - p1.y) * d.x / d.y;
+
 	double y1 = p1.y + (x1 - p1.x) * d.y / d.x;
 	double y2 = p1.y + (x2 - p1.x) * d.y / d.x;
 	double fy1 = y1 - floor(y1);
 	double fy2 = y2 - floor(y2);
-	double xtop = p1.x + (x2 - p1.y) * d.x / d.y;
-	double xmid = p1.x + (x1 - p1.y) * d.x / d.y;
-	double xbot = p1.x + ((x1 - 1.0) - p1.y) * d.x / d.y;
-	int iy1 = (int)floor(y1 - x1), iy2 = (int)floor(y2 - x2);
+	int iy1 = (int)floor(y1 - ymid);
+	int iy2 = (int)floor(y2 - ymid);
 
 	if (iy1 <= -2) {
-		if (iy2 == -2)
+		if (iy2 == -1)
 			return Dbl2(1.0 - (x2 - xbot) * fy2 * 0.5, 0.0);
-		else if (iy2 == -1)
+		else if (iy2 == 0)
 			return Dbl2((xmid + xbot) * 0.5 - x1, (x2 - xmid) * fy2 * 0.5);
-		else if (iy2 >= 0)
+		else if (iy2 >= 1)
 			return Dbl2((xmid + xbot) * 0.5 - x1, x2 -  (xtop + xmid) * 0.5);
-		else /* iy2 < -2 */
+		else /* iy2 < -1 */
 			return Dbl2(1.0, 0.0);
 	}
 	else if (iy1 == -1) {
-		if (iy2 == -2)
+		if (iy2 == -1)
 			return Dbl2(1.0 - (fy1 + fy2) * 0.5, 0.0);
-		else if (iy2 == -1)
+		else if (iy2 == 0)
 			return Dbl2((xmid - x1) * (1.0 - fy1) * 0.5, (x2 - xmid) * fy2 * 0.5);
-		else if (iy2 >= 0)
+		else if (iy2 >= 1)
 			return Dbl2((xmid - x1) * (1.0 - fy1) * 0.5, x2 - (xtop + xmid) * 0.5);
-		else /* iy2 < -2 */
+		else /* iy2 < -1 */
 			return Dbl2(1.0 - (xbot - x1) * fy1 * 0.5, 0.0);
 	}
 	else if (iy1 == 0) {
-		if (iy2 == -2)
+		if (iy2 == -1)
 			return Dbl2((x2 - xmid) * (1.0 - fy2) * 0.5, (xmid - x1) * fy1 * 0.5);
-		else if (iy2 == -1)
+		else if (iy2 == 0)
 			return Dbl2(0.0, (fy1 + fy2) * 0.5);
-		else if (iy2 >= 0)
+		else if (iy2 >= 1)
 			return Dbl2(0.0, 1.0 - (xtop - x1) * (1.0 - fy1) * 0.5);
-		else /* iy2 < -2 */
+		else /* iy2 < -1 */
 			return Dbl2(x2 - (xmid + xbot) * 0.5, (xmid - x1) * fy1 * 0.5);
 	}
 	else { /* iy1 > 0 */
-		if (iy2 == -2)
+		if (iy2 == -1)
 			return Dbl2((x2 - xtop) * (1.0 - fy2) * 0.5, (xtop + xmid) * 0.5 - x1);
-		else if (iy2 == -1)
+		else if (iy2 == 0)
 			return Dbl2(0.0, 1.0 - (x1 - xtop) * (1.0 - fy2) * 0.5);
-		else if (iy2 >= 0)
+		else if (iy2 >= 1)
 			return Dbl2(0.0, 1.0);
-		else /* iy2 < -2 */
+		else /* iy2 < -1 */
 			return Dbl2(x2 - (xmid + xbot) * 0.5, (xtop + xmid) * 0.5 - x1);
 	}
 }
@@ -687,7 +691,12 @@ Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
 			 *   |
 			 *   |
 			 */
-			return area(pattern, Dbl2(1.0, 0.0), Dbl2(1.0, 0.0) + Dbl2(d), left, offset);
+			if (m_orig_u)
+				return area(pattern, Dbl2(1.0, 0.0), Dbl2(1.0, 0.0) + Dbl2(d), left, offset);
+			else if (left < right)
+				return area(pattern, Dbl2(1.0, 0.0), Dbl2(1.0, 1.0) + Dbl2(d), left, offset);
+			else
+				return area(pattern, Dbl2(0.0, 0.0), Dbl2(1.0, 0.0) + Dbl2(d), left, offset);
 			break;
 		}
 		case EDGESDIAG_HORZ_NONE:
@@ -825,7 +834,12 @@ Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
 			 *
 			 *
 			 */
-			return area(pattern, Dbl2(1.0, 1.0), Dbl2(1.0, 1.0) + Dbl2(d), left, offset);
+			if (m_orig_u)
+				return area(pattern, Dbl2(1.0, 1.0), Dbl2(1.0, 1.0) + Dbl2(d), left, offset);
+			else if (left <= right)
+				return area(pattern, Dbl2(1.0, 1.0), Dbl2(2.0, 1.0) + Dbl2(d), left, offset);
+			else
+				return area(pattern, Dbl2(1.0, 0.0), Dbl2(1.0, 1.0) + Dbl2(d), left, offset);
 			break;
 		}
 		case EDGESDIAG_BOTH_VERT:
@@ -1035,6 +1049,7 @@ int main(int argc, char **argv)
 	bool tga = false;
 	bool compat = false;
 	bool numeric = false;
+	bool orig_u = false;
 	bool help = false;
 	char *outfile = NULL;
 	int status = 0;
@@ -1054,6 +1069,8 @@ int main(int argc, char **argv)
 					compat = true;
 				else if (c == 'n')
 					numeric = true;
+				else if (c == 'u')
+					orig_u = true;
 				else if (c == 'h')
 					help = true;
 				else {
@@ -1087,18 +1104,19 @@ int main(int argc, char **argv)
 		fprintf(stderr, "    -t    Write TGA image instead of C/C++ source\n");
 		fprintf(stderr, "    -c    Generate compatible orthogonal data that subtexture size is 16\n");
 		fprintf(stderr, "    -n    Numerically calculate diagonal data using brute force sampling\n");
+		fprintf(stderr, "    -u    Process diagonal U patterns in older way (Straighten U patterns)\n");
 		fprintf(stderr, "    -h    Print this help and exit\n");
 		fprintf(stderr, "File name OUTFILE usually should have an extension such as .c, .h, or .tga,\n");
 		fprintf(stderr, "except for a special name '-' that means standard output.\n\n");
 		fprintf(stderr, "Example:\n");
 		fprintf(stderr, "  Generate TGA file exactly same as AreaTexDX10.tga bundled with the\n");
 		fprintf(stderr, "  original implementation:\n\n");
-		fprintf(stderr, "  $ smaa_areatex -stcn AreaTexDX10.tga\n\n");
+		fprintf(stderr, "  $ smaa_areatex -stcnu AreaTexDX10.tga\n\n");
 		return status;
 	}
 
 	AreaOrtho *ortho = new AreaOrtho(compat);
-	AreaDiag *diag = new AreaDiag(numeric);
+	AreaDiag *diag = new AreaDiag(numeric, orig_u);
 
 	/* Calculate areatex data */
 	for (int i = 0; i < (subsampling ? SUBSAMPLES_ORTHO : 1); i++)
