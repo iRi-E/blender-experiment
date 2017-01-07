@@ -596,10 +596,9 @@ typedef struct NodeBilateralBlurData {
 } NodeBilateralBlurData;
 
 typedef struct NodeAntiAliasingData {
-	char detect_type, pred, diag, corner;
+	char detect_type, corner, pad1, pad2;
 	float thresh, dept_thresh, adapt_fac;
-	float pred_thresh, pred_scale, pred_str;
-	int search_steps, search_steps_diag, rounding;
+	int rounding, pad;
 } NodeAntiAliasingData;
 
 typedef struct NodeHueSat {

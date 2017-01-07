@@ -51,9 +51,6 @@ public:
 	void setData(const NodeAntiAliasingData *data) { m_config = *data; }
 
 	bool determineDependingAreaOfInterest(rcti *input, ReadBufferOperation *readOperation, rcti *output);
-
-protected:
-	void calculatePredicatedThreshold(int x, int y, float threshold[2]);
 };
 
 class SMAALumaEdgeDetectionOperation: public SMAAEdgeDetectionOperation {

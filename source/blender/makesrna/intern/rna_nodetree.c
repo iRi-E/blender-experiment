@@ -6811,52 +6811,10 @@ static void def_cmp_antialiasing(StructRNA *srna)
 	RNA_def_property_ui_text(prop, "Local Contrast Adaptation Factor", "How big a crossing edge breaking current edge has contrast");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
-	prop = RNA_def_property(srna, "enable_predication", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "pred", 1);
-	RNA_def_property_ui_text(prop, "Predication", "Enable predicated thresholding that preserves more texture details and improves performance");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
-	prop = RNA_def_property(srna, "predication_threshold", PROP_FLOAT, PROP_UNSIGNED);
-	RNA_def_property_float_sdna(prop, NULL, "pred_thresh");
-	RNA_def_property_ui_range(prop, 0.0f, 100.0f, 1.0, 3);
-	RNA_def_property_ui_text(prop, "Threshold", "Threshold used in the additional predication buffer (needs to adjust the value depending on the input)");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
-	prop = RNA_def_property(srna, "predication_scale", PROP_FLOAT, PROP_UNSIGNED);
-	RNA_def_property_float_sdna(prop, NULL, "pred_scale");
-	RNA_def_property_range(prop, 1.0f, 5.0f);
-	RNA_def_property_ui_range(prop, 1.0f, 5.0f, 1.0, 3);
-	RNA_def_property_ui_text(prop, "Scale", "How much to scale the global predicated threshold used for luma or color edge detection");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
-	prop = RNA_def_property(srna, "predication_strength", PROP_FLOAT, PROP_UNSIGNED);
-	RNA_def_property_float_sdna(prop, NULL, "pred_str");
-	RNA_def_property_range(prop, 0.0f, 1.0f);
-	RNA_def_property_ui_range(prop, 0.0f, 1.0f, 1.0, 3);
-	RNA_def_property_ui_text(prop, "Strength", "How much to locally decrease the predicated threshold");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
 	prop = RNA_def_property(srna, "depth_threshold", PROP_FLOAT, PROP_UNSIGNED);
 	RNA_def_property_float_sdna(prop, NULL, "dept_thresh");
 	RNA_def_property_ui_range(prop, 0.0f, 100.0f, 1.0, 3);
 	RNA_def_property_ui_text(prop, "Threshold", "Threshold for depth edge detection (needs to adjust the value depending on the depth range of the scene)");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
-	prop = RNA_def_property(srna, "max_search_steps", PROP_INT, PROP_UNSIGNED);
-	RNA_def_property_int_sdna(prop, NULL, "search_steps");
-	RNA_def_property_range(prop, 1, 362); /* 362 - 1 = 19^2 */
-	RNA_def_property_ui_text(prop, "Search Steps", "Maximum steps performed in the horizontal/vertical pattern searches, at each side of the pixel");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
-	prop = RNA_def_property(srna, "enable_diag_detection", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "diag", 1);
-	RNA_def_property_ui_text(prop, "Diagonal Detection", "Perform diagonal pattern searches");
-	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
-
-	prop = RNA_def_property(srna, "max_search_steps_diag", PROP_INT, PROP_UNSIGNED);
-	RNA_def_property_int_sdna(prop, NULL, "search_steps_diag");
-	RNA_def_property_range(prop, 1, 19);
-	RNA_def_property_ui_text(prop, "Search Steps", "Maximum steps performed in the diagonal pattern searches, at each side of the pixel");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
 	prop = RNA_def_property(srna, "enable_corner_detection", PROP_BOOLEAN, PROP_NONE);
@@ -6864,7 +6822,7 @@ static void def_cmp_antialiasing(StructRNA *srna)
 	RNA_def_property_ui_text(prop, "Corner Detection", "Avoid the sharp corners will be rounded");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
-prop = RNA_def_property(srna, "corner_rounding", PROP_INT, PROP_UNSIGNED);
+	prop = RNA_def_property(srna, "corner_rounding", PROP_INT, PROP_UNSIGNED);
 	RNA_def_property_int_sdna(prop, NULL, "rounding");
 	RNA_def_property_range(prop, 0, 100);
 	RNA_def_property_ui_text(prop, "Corner Rounding", "How much sharp corners will be rounded");

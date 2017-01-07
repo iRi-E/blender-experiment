@@ -34,8 +34,8 @@
 /* **************** Anti-Aliasing (SMAA 1x) ******************** */
 
 static bNodeSocketTemplate cmp_node_antialiasing_in[] = {
-	{   SOCK_RGBA, 1, N_("Image"),			1.0f, 1.0f, 1.0f, 1.0f},
-	{   SOCK_FLOAT, 1, N_("Depth or Predication"),	1.0f, 1.0f, 1.0f, 1.0f},
+	{   SOCK_RGBA, 1, N_("Image"),		1.0f, 1.0f, 1.0f, 1.0f},
+	{   SOCK_FLOAT, 1, N_("Depth"),		1.0f, 1.0f, 1.0f, 1.0f},
 	{   -1, 0, ""	}
 };
 
@@ -51,17 +51,10 @@ static void node_composit_init_antialiasing(bNodeTree *UNUSED(ntree), bNode *nod
 	NodeAntiAliasingData *data = MEM_callocN(sizeof(NodeAntiAliasingData), "node antialiasing data");
 
 	data->detect_type = CMP_NODE_ANTIALIASING_COLOR;
-	data->pred = false;
-	data->diag = true;
-	data->corner = true;
 	data->thresh = 0.05f;
 	data->dept_thresh = 0.1f;
 	data->adapt_fac = 2.0f;
-	data->pred_thresh = 0.01f;
-	data->pred_scale = 2.0f;
-	data->pred_str = 0.4f;
-	data->search_steps = 66;
-	data->search_steps_diag = 16;
+	data->corner = true;
 	data->rounding = 25;
 
 	node->storage = data;
