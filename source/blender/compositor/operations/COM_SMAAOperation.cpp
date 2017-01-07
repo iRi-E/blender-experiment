@@ -29,10 +29,13 @@
  * The algorithm was proposed by:
  *   Jorge Jimenez, Jose I. Echevarria, Tiago Sousa, Diego Gutierrez
  *
- * Homepage URL:
  *   http://www.iryoku.com/smaa/
  *
- * This program provides only SMAA 1x mode, so the operation will be done
+ * This file is based on smaa-cpp:
+ *
+ *   https://github.com/iRi-E/smaa-cpp
+ *
+ * Currently only SMAA 1x mode is provided, so the operation will be done
  * with no spatial multisampling nor temporal supersampling.
  *
  * Note: This program assumes the screen coordinates are DirectX style, so
