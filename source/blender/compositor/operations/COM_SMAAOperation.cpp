@@ -146,7 +146,7 @@ static void area_diag(int d1, int d2, int e1, int e2, float weights[2])
 SMAAEdgeDetectionOperation::SMAAEdgeDetectionOperation() : NodeOperation()
 {
 	this->addInputSocket(COM_DT_COLOR); /* image */
-	this->addInputSocket(COM_DT_VALUE); /* depth */
+	this->addInputSocket(COM_DT_VALUE); /* depth, material ID, etc. */
 	this->addOutputSocket(COM_DT_COLOR);
 	this->setComplex(true);
 	this->m_imageReader = NULL;
@@ -347,8 +347,8 @@ void SMAADepthEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	output[0] = (fabsf(here[0] - left[0]) >= m_config.dept_thresh) ? 1.0f : 0.0f;
-	output[1] = (fabsf(here[0] - top[0]) >= m_config.dept_thresh) ? 1.0f : 0.0f;
+	output[0] = (fabsf(here[0] - left[0]) >= m_config.val_thresh) ? 1.0f : 0.0f;
+	output[1] = (fabsf(here[0] - top[0]) >= m_config.val_thresh) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 }

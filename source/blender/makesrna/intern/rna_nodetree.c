@@ -6757,7 +6757,7 @@ static void def_cmp_antialiasing(StructRNA *srna)
 	static EnumPropertyItem edge_detection_type_items[] = {
 		{CMP_NODE_ANTIALIASING_LUMA,  "LUMA",  0, "Luma", ""},
 		{CMP_NODE_ANTIALIASING_COLOR, "COLOR", 0, "Color", ""},
-		{CMP_NODE_ANTIALIASING_DEPTH, "DEPTH", 0, "Depth", ""},
+		{CMP_NODE_ANTIALIASING_VALUE, "VALUE", 0, "Value", ""},
 		{0, NULL, 0, NULL, NULL}
 	};
 
@@ -6783,10 +6783,10 @@ static void def_cmp_antialiasing(StructRNA *srna)
 	RNA_def_property_ui_text(prop, "Local Contrast Adaptation Factor", "How big a crossing edge breaking current edge has contrast");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
-	prop = RNA_def_property(srna, "depth_threshold", PROP_FLOAT, PROP_UNSIGNED);
-	RNA_def_property_float_sdna(prop, NULL, "dept_thresh");
+	prop = RNA_def_property(srna, "value_threshold", PROP_FLOAT, PROP_UNSIGNED);
+	RNA_def_property_float_sdna(prop, NULL, "val_thresh");
 	RNA_def_property_ui_range(prop, 0.0f, 100.0f, 1.0, 3);
-	RNA_def_property_ui_text(prop, "Threshold", "Threshold for depth edge detection (needs to adjust the value depending on the depth range of the scene)");
+	RNA_def_property_ui_text(prop, "Threshold", "Threshold for additional value input (needs to adjust depending on the value range)");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
 	prop = RNA_def_property(srna, "enable_corner_detection", PROP_BOOLEAN, PROP_NONE);

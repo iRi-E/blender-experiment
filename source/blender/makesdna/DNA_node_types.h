@@ -597,7 +597,7 @@ typedef struct NodeBilateralBlurData {
 
 typedef struct NodeAntiAliasingData {
 	char detect_type, corner, pad1, pad2;
-	float thresh, dept_thresh, adapt_fac;
+	float thresh, val_thresh, adapt_fac;
 	int rounding, pad;
 } NodeAntiAliasingData;
 
@@ -1166,7 +1166,7 @@ enum {
 enum {
 	CMP_NODE_ANTIALIASING_LUMA  = 0,
 	CMP_NODE_ANTIALIASING_COLOR = 1,
-	CMP_NODE_ANTIALIASING_DEPTH = 2,
+	CMP_NODE_ANTIALIASING_VALUE = 2,
 };
 
 #endif

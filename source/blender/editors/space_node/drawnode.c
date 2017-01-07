@@ -1457,12 +1457,12 @@ static void node_composit_buts_antialiasing(uiLayout *layout, bContext *UNUSED(C
 	uiItemL(col, IFACE_("Edge Detection:"), ICON_NONE);
 	uiItemR(col, ptr, "edge_detection_type", 0, "", ICON_NONE);
 
-	if (RNA_enum_get(ptr, "edge_detection_type") != CMP_NODE_ANTIALIASING_DEPTH) {
+	if (RNA_enum_get(ptr, "edge_detection_type") != CMP_NODE_ANTIALIASING_VALUE) {
 		uiItemR(col, ptr, "threshold", 0, NULL, ICON_NONE);
 		uiItemR(col, ptr, "local_contrast_adaptation_factor", 0, NULL, ICON_NONE);
 	}
 	else {
-		uiItemR(col, ptr, "depth_threshold", 0, NULL, ICON_NONE);
+		uiItemR(col, ptr, "value_threshold", 0, NULL, ICON_NONE);
 	}
 
 	uiItemR(col, ptr, "enable_corner_detection", 0, NULL, ICON_NONE);
