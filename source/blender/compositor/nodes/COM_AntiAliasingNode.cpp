@@ -33,15 +33,19 @@ void AntiAliasingNode::convertToOperations(NodeConverter &converter, const Compo
 	switch (data->detect_type) {
 		case CMP_NODE_ANTIALIASING_LUMA:
 			operation1 = new SMAALumaEdgeDetectionOperation();
+			operation1->setThreshold(data->thresh);
+			operation1->setLocalContrastAdaptationFactor(data->adapt_fac);
 			break;
 		case CMP_NODE_ANTIALIASING_COLOR:
 			operation1 = new SMAAColorEdgeDetectionOperation();
+			operation1->setThreshold(data->thresh);
+			operation1->setLocalContrastAdaptationFactor(data->adapt_fac);
 			break;
 		case CMP_NODE_ANTIALIASING_VALUE:
 			operation1 = new SMAADepthEdgeDetectionOperation();
+			operation1->setThreshold(data->val_thresh);
 			break;
 	}
-	operation1->setData(data);
 	converter.addOperation(operation1);
 
 	converter.mapInputSocket(getInputSocket(0), operation1->getInputSocket(0));
@@ -50,7 +54,8 @@ void AntiAliasingNode::convertToOperations(NodeConverter &converter, const Compo
 
 	/* Blending Weight Calculation Pixel Shader (Second Pass) */
 	SMAABlendingWeightCalculationOperation *operation2 = new SMAABlendingWeightCalculationOperation();
-	operation2->setData(data);
+	operation2->setEnableCornerDetection(data->corner);
+	operation2->setCornerRounding(data->rounding);
 	converter.addOperation(operation2);
 
 	converter.addLink(operation1->getOutputSocket(), operation2->getInputSocket(0));

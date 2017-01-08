@@ -151,7 +151,8 @@ SMAAEdgeDetectionOperation::SMAAEdgeDetectionOperation() : NodeOperation()
 	this->setComplex(true);
 	this->m_imageReader = NULL;
 	this->m_valueReader = NULL;
-	memset(&m_config, 0, sizeof(NodeAntiAliasingData));
+	this->m_threshold = 0.1f;
+	this->m_local_contrast_adaptation_factor = 2.0f;
 }
 
 void SMAAEdgeDetectionOperation::initExecution()
@@ -195,8 +196,8 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float Dtop  = fabsf(L - Ltop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= m_config.thresh) ? 1.0f : 0.0f;
-	output[1] = (Dtop >= m_config.thresh) ? 1.0f : 0.0f;
+	output[0] = (Dleft >= m_threshold) ? 1.0f : 0.0f;
+	output[1] = (Dtop >= m_threshold) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 
@@ -234,7 +235,7 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 		maxDelta = fmaxf(maxDelta, fmaxf(Dleftleft, fmaxf(Dlefttop, Dleftbottom)));
 
 		/* Local contrast adaptation: */
-		if (maxDelta > m_config.adapt_fac * Dleft)
+		if (maxDelta > m_local_contrast_adaptation_factor * Dleft)
 			output[0] =  0.0f;
 	}
 
@@ -253,7 +254,7 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 		maxDelta = fmaxf(maxDelta, fmaxf(Dtoptop, fmaxf(Dtopleft, Dtopright)));
 
 		/* Local contrast adaptation: */
-		if (maxDelta > m_config.adapt_fac * Dtop)
+		if (maxDelta > m_local_contrast_adaptation_factor * Dtop)
 			output[1] =  0.0f;
 	}
 }
@@ -276,8 +277,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	float Dtop  = color_delta(C, Ctop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= m_config.thresh) ? 1.0f : 0.0f;
-	output[1] = (Dtop >= m_config.thresh) ? 1.0f : 0.0f;
+	output[0] = (Dleft >= m_threshold) ? 1.0f : 0.0f;
+	output[1] = (Dtop >= m_threshold) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 
@@ -313,7 +314,7 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 		maxDelta = fmaxf(maxDelta, fmaxf(Dleftleft, fmaxf(Dlefttop, Dleftbottom)));
 
 		/* Local contrast adaptation: */
-		if (maxDelta > m_config.adapt_fac * Dleft)
+		if (maxDelta > m_local_contrast_adaptation_factor * Dleft)
 			output[0] =  0.0f;
 	}
 
@@ -331,7 +332,7 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 		maxDelta = fmaxf(maxDelta, fmaxf(Dtoptop, fmaxf(Dtopleft, Dtopright)));
 
 		/* Local contrast adaptation: */
-		if (maxDelta > m_config.adapt_fac * Dtop)
+		if (maxDelta > m_local_contrast_adaptation_factor * Dtop)
 			output[1] =  0.0f;
 	}
 
@@ -347,8 +348,8 @@ void SMAADepthEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	output[0] = (fabsf(here[0] - left[0]) >= m_config.val_thresh) ? 1.0f : 0.0f;
-	output[1] = (fabsf(here[0] - top[0]) >= m_config.val_thresh) ? 1.0f : 0.0f;
+	output[0] = (fabsf(here[0] - left[0]) >= m_threshold) ? 1.0f : 0.0f;
+	output[1] = (fabsf(here[0] - top[0]) >= m_threshold) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 }
@@ -376,7 +377,8 @@ SMAABlendingWeightCalculationOperation::SMAABlendingWeightCalculationOperation()
 	this->addOutputSocket(COM_DT_COLOR);
 	this->setComplex(true);
 	this->m_imageReader = NULL;
-	memset(&m_config, 0, sizeof(NodeAntiAliasingData));
+	this->m_enable_corner_detection = true;
+	this->m_corner_rounding = 25;
 }
 
 void *SMAABlendingWeightCalculationOperation::initializeTileData(rcti *rect)
@@ -432,7 +434,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 		area(d1, d2, e1, e2, output); /* R, G */
 
 		/* Fix corners: */
-		if (m_config.corner)
+		if (m_enable_corner_detection)
 			detectHorizontalCornerPattern(output, left, right, y, d1, d2);
 	}
 
@@ -466,7 +468,7 @@ void SMAABlendingWeightCalculationOperation::executePixel(float output[4], int x
 		area(d1, d2, e1, e2, output + 2); /* B, A */
 
 		/* Fix corners: */
-		if (m_config.corner)
+		if (m_enable_corner_detection)
 			detectVerticalCornerPattern(output + 2, x, top, bottom, d1, d2);
 	}
 }
@@ -755,7 +757,7 @@ void SMAABlendingWeightCalculationOperation::detectHorizontalCornerPattern(float
 									   int left, int right, int y, int d1, int d2)
 {
 	float factor[2] = {1.0f, 1.0f};
-	float rounding = 1.0f - m_config.rounding / 100.0f;
+	float rounding = 1.0f - m_corner_rounding / 100.0f;
 	float e[4];
 
 	/* Reduce blending for pixels in the center of a line. */
@@ -784,7 +786,7 @@ void SMAABlendingWeightCalculationOperation::detectVerticalCornerPattern(float w
 									 int x, int top, int bottom, int d1, int d2)
 {
 	float factor[2] = {1.0f, 1.0f};
-	float rounding = 1.0f - m_config.rounding / 100.0f;
+	float rounding = 1.0f - m_corner_rounding / 100.0f;
 	float e[4];
 
 	/* Reduce blending for pixels in the center of a line. */

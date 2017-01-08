@@ -29,7 +29,9 @@ class SMAAEdgeDetectionOperation : public NodeOperation {
 protected:
 	SocketReader *m_imageReader;
 	SocketReader *m_valueReader;
-	NodeAntiAliasingData m_config;
+
+	float m_threshold;
+	float m_local_contrast_adaptation_factor;
 public:
 	SMAAEdgeDetectionOperation();
 
@@ -48,7 +50,8 @@ public:
 	 */
 	void deinitExecution();
 
-	void setData(const NodeAntiAliasingData *data) { m_config = *data; }
+	void setThreshold(float threshold) { m_threshold = threshold; }
+	void setLocalContrastAdaptationFactor(float factor) { m_local_contrast_adaptation_factor = factor; }
 
 	bool determineDependingAreaOfInterest(rcti *input, ReadBufferOperation *readOperation, rcti *output);
 };
@@ -75,7 +78,9 @@ public:
 class SMAABlendingWeightCalculationOperation : public NodeOperation {
 private:
 	SocketReader *m_imageReader;
-	NodeAntiAliasingData m_config;
+
+	char m_enable_corner_detection;
+	int m_corner_rounding;
 public:
 	SMAABlendingWeightCalculationOperation();
 
@@ -95,7 +100,8 @@ public:
 	 */
 	void deinitExecution();
 
-	void setData(const NodeAntiAliasingData *data) { m_config = *data; }
+	void setEnableCornerDetection(bool enable) { m_enable_corner_detection = enable; }
+	void setCornerRounding(int rounding) { m_corner_rounding = rounding; }
 
 	bool determineDependingAreaOfInterest(rcti *input, ReadBufferOperation *readOperation, rcti *output);
 private:
