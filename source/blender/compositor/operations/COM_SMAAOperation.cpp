@@ -21,7 +21,10 @@
 #include "COM_SMAAOperation.h"
 #include "COM_SMAAAreaTexture.h"
 #include "BLI_math.h"
+
+extern "C" {
 #include "IMB_colormanagement.h"
+}
 
 /*
  * An implementation of Enhanced Subpixel Morphological Antialiasing (SMAA)
