@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Blender Foundation.
+ * Copyright 2017, Blender Foundation.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
