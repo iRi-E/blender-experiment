@@ -21,7 +21,7 @@
  */
 
 /*
- * smaa_areatex.cpp  version 0.3.1
+ * smaa_areatex.cpp  version 0.3.2
  *
  * This is a part of smaa-cpp that is an implementation of
  * Enhanced Subpixel Morphological Antialiasing (SMAA) written in C++.
@@ -210,21 +210,21 @@ public:
 			    m_data[offset_index][coords.y][coords.x][1]);
 	}
 
-	void areatex(int offset_index);
+	void areaTex(int offset_index);
 private:
 	void putPixel(int offset_index, Int2 coords, Dbl2 pixel) {
 		m_data[offset_index][coords.y][coords.x][0] = pixel.x;
 		m_data[offset_index][coords.y][coords.x][1] = pixel.y;
 	}
 
-	Dbl2 smootharea(double d, Dbl2 a1, Dbl2 a2);
-	Dbl2 makequad(int x, double d, double o);
+	Dbl2 smoothArea(double d, Dbl2 a1, Dbl2 a2);
+	Dbl2 makeQuad(int x, double d, double o);
 	Dbl2 area(Dbl2 p1, Dbl2 p2, int x);
 	Dbl2 calculate(int pattern, int left, int right, double offset);
 };
 
 /* Smoothing function for small u-patterns: */
-Dbl2 AreaOrtho::smootharea(double d, Dbl2 a1, Dbl2 a2)
+Dbl2 AreaOrtho::smoothArea(double d, Dbl2 a1, Dbl2 a2)
 {
 	Dbl2 b1 = (a1 * Dbl2(2.0)).apply(sqrt) * Dbl2(0.5);
 	Dbl2 b2 = (a2 * Dbl2(2.0)).apply(sqrt) * Dbl2(0.5);
@@ -233,7 +233,7 @@ Dbl2 AreaOrtho::smootharea(double d, Dbl2 a1, Dbl2 a2)
 }
 
 /* Smoothing u-patterns by quadratic function: */
-Dbl2 AreaOrtho::makequad(int x, double d, double o)
+Dbl2 AreaOrtho::makeQuad(int x, double d, double o)
 {
 	double r = (double)x;
 
@@ -344,10 +344,10 @@ Dbl2 AreaOrtho::calculate(int pattern, int left, int right, double offset)
 			if (m_orig_u) {
 				a1 = area(Dbl2(0.0, o2), Dbl2(d / 2.0, 0.0), left);
 				a2 = area(Dbl2(d / 2.0, 0.0), Dbl2(d, o2), left);
-				return smootharea(d, a1, a2);
+				return smoothArea(d, a1, a2);
 			}
 			else
-				return area(makequad(left, d, o2), makequad(left + 1, d, o2), left);
+				return area(makeQuad(left, d, o2), makeQuad(left + 1, d, o2), left);
 			break;
 		}
 		case EDGESORTHO_NEGA_NONE:
@@ -466,10 +466,10 @@ Dbl2 AreaOrtho::calculate(int pattern, int left, int right, double offset)
 			if (m_orig_u) {
 				a1 = area(Dbl2(0.0, o1), Dbl2(d / 2.0, 0.0), left);
 				a2 = area(Dbl2(d / 2.0, 0.0), Dbl2(d, o1), left);
-				return smootharea(d, a1, a2);
+				return smoothArea(d, a1, a2);
 			}
 			else
-				return area(makequad(left, d, o1), makequad(left + 1, d, o1), left);
+				return area(makeQuad(left, d, o1), makeQuad(left + 1, d, o1), left);
 			break;
 		}
 		case EDGESORTHO_BOTH_NEGA:
@@ -523,7 +523,7 @@ public:
 			    m_data[offset_index][coords.y][coords.x][1]);
 	}
 
-	void areatex(int offset_index);
+	void areaTex(int offset_index);
 private:
 	void putPixel(int offset_index, Int2 coords, Dbl2 pixel) {
 		m_data[offset_index][coords.y][coords.x][0] = pixel.x;
@@ -532,6 +532,7 @@ private:
 
 	double area1(Dbl2 p1, Dbl2 p2, Int2 p);
 	Dbl2 area(Dbl2 p1, Dbl2 p2, int left);
+	Dbl2 areaTriangle(Dbl2 p1L, Dbl2 p2L, Dbl2 p1R, Dbl2 p2R, int left);
 	Dbl2 calculate(int pattern, int left, int right, Dbl2 offset);
 };
 
@@ -630,6 +631,22 @@ Dbl2 AreaDiag::area(Dbl2 p1, Dbl2 p2, int left)
 	}
 }
 
+/* Calculate u-patterns using a triangle: */
+Dbl2 AreaDiag::areaTriangle(Dbl2 p1L, Dbl2 p2L, Dbl2 p1R, Dbl2 p2R, int left)
+{
+	double x1 = (double)(1 + left);
+	double x2 = x1 + 1.0;
+
+	Dbl2 dL = p2L - p1L;
+	Dbl2 dR = p2R - p1R;
+	double xm = ((p1L.x * dL.y / dL.x - p1L.y) - (p1R.x * dR.y / dR.x - p1R.y)) / (dL.y / dL.x - dR.y / dR.x);
+
+	double y1 = (x1 < xm) ? p1L.y + (x1 - p1L.x) * dL.y / dL.x : p1R.y + (x1 - p1R.x) * dR.y / dR.x;
+	double y2 = (x2 < xm) ? p1L.y + (x2 - p1L.x) * dL.y / dL.x : p1R.y + (x2 - p1R.x) * dR.y / dR.x;
+
+	return area(Dbl2(x1, y1), Dbl2(x2, y2), left);
+}
+
 /* Calculates the area for a given pattern and distances to the left and to the */
 /* right, biased by an offset: */
 Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
@@ -707,10 +724,9 @@ Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
 			 */
 			if (m_orig_u)
 				return area(Dbl2(1.0, 0.0) + offset, Dbl2(1.0, 0.0) + Dbl2(d) + offset, left);
-			else if (left < right)
-				return area(Dbl2(1.0, 0.0) + offset, Dbl2(1.0, 1.0) + Dbl2(d), left);
 			else
-				return area(Dbl2(0.0, 0.0), Dbl2(1.0, 0.0) + Dbl2(d) + offset, left);
+				return areaTriangle(Dbl2(1.0, 0.0) + offset, Dbl2(1.0, 1.0) + Dbl2(d),
+						    Dbl2(0.0, 0.0), Dbl2(1.0, 0.0) + Dbl2(d) + offset, left);
 			break;
 		}
 		case EDGESDIAG_HORZ_NONE:
@@ -850,10 +866,9 @@ Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
 			 */
 			if (m_orig_u)
 				return area(Dbl2(1.0, 1.0) + offset, Dbl2(1.0, 1.0) + Dbl2(d) + offset, left);
-			else if (left <= right)
-				return area(Dbl2(1.0, 1.0) + offset, Dbl2(2.0, 1.0) + Dbl2(d), left);
 			else
-				return area(Dbl2(1.0, 0.0), Dbl2(1.0, 1.0) + Dbl2(d) + offset, left);
+				return areaTriangle(Dbl2(1.0, 1.0) + offset, Dbl2(2.0, 1.0) + Dbl2(d),
+						    Dbl2(1.0, 0.0), Dbl2(1.0, 1.0) + Dbl2(d) + offset, left);
 			break;
 		}
 		case EDGESDIAG_BOTH_VERT:
@@ -912,7 +927,7 @@ Dbl2 AreaDiag::calculate(int pattern, int left, int right, Dbl2 offset)
 /*------------------------------------------------------------------------------*/
 /* Main Loops */
 
-void AreaOrtho::areatex(int offset_index)
+void AreaOrtho::areaTex(int offset_index)
 {
 	double offset = subsample_offsets_ortho[offset_index];
 	int max_dist = m_compat ? MAX_DIST_ORTHO_COMPAT : MAX_DIST_ORTHO;
@@ -931,7 +946,7 @@ void AreaOrtho::areatex(int offset_index)
 	return;
 }
 
-void AreaDiag::areatex(int offset_index)
+void AreaDiag::areaTex(int offset_index)
 {
 	Dbl2 offset = subsample_offsets_diag[offset_index];
 
@@ -1134,10 +1149,10 @@ int main(int argc, char **argv)
 
 	/* Calculate areatex data */
 	for (int i = 0; i < (subsampling ? SUBSAMPLES_ORTHO : 1); i++)
-		ortho->areatex(i);
+		ortho->areaTex(i);
 
 	for (int i = 0; i < (subsampling ? SUBSAMPLES_DIAG : 1); i++)
-		diag->areatex(i);
+		diag->areaTex(i);
 
 	/* Generate C++ source file or .tga file, or write the data to stdout */
 	if (strcmp(outfile, "-") != 0)
