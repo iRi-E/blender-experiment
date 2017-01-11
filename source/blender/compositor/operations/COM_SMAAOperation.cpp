@@ -677,7 +677,7 @@ bool SMAABlendingWeightCalculationOperation::isVerticalSearchUnneeded(int x, int
 
 int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 {
-	int end = x - SMAA_MAX_SEARCH_STEPS;
+	int end = max_ii(x - SMAA_MAX_SEARCH_STEPS, -1);
 	float e[4];
 
 	while (x > end) {
@@ -697,7 +697,7 @@ int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 {
-	int end = x + SMAA_MAX_SEARCH_STEPS;
+	int end = min_ii(x + SMAA_MAX_SEARCH_STEPS, m_imageReader->getWidth());
 	float e[4];
 
 	while (x < end) {
@@ -716,7 +716,7 @@ int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 {
-	int end = y - SMAA_MAX_SEARCH_STEPS;
+	int end = max_ii(y - SMAA_MAX_SEARCH_STEPS, -1);
 	float e[4];
 
 	while (y > end) {
@@ -736,7 +736,7 @@ int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 {
-	int end = y + SMAA_MAX_SEARCH_STEPS;
+	int end = min_ii(y + SMAA_MAX_SEARCH_STEPS, m_imageReader->getHeight());
 	float e[4];
 
 	while (y < end) {
