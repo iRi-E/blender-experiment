@@ -486,14 +486,14 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 {
 	rcti newInput;
 
-	newInput.xmax = input->xmax + max(SMAA_MAX_SEARCH_STEPS,
-					  SMAA_MAX_SEARCH_STEPS_DIAG + 1);
-	newInput.xmin = input->xmin - max(max(SMAA_MAX_SEARCH_STEPS - 1, 1),
-					  SMAA_MAX_SEARCH_STEPS_DIAG + 1);
-	newInput.ymax = input->ymax + max(SMAA_MAX_SEARCH_STEPS,
-					  SMAA_MAX_SEARCH_STEPS_DIAG);
-	newInput.ymin = input->ymin - max(max(SMAA_MAX_SEARCH_STEPS - 1, 1),
-					  SMAA_MAX_SEARCH_STEPS_DIAG);
+	newInput.xmax = input->xmax + max_ii(SMAA_MAX_SEARCH_STEPS,
+					     SMAA_MAX_SEARCH_STEPS_DIAG + 1);
+	newInput.xmin = input->xmin - max_ii(max_ii(SMAA_MAX_SEARCH_STEPS - 1, 1),
+					     SMAA_MAX_SEARCH_STEPS_DIAG + 1);
+	newInput.ymax = input->ymax + max_ii(SMAA_MAX_SEARCH_STEPS,
+					     SMAA_MAX_SEARCH_STEPS_DIAG);
+	newInput.ymin = input->ymin - max_ii(max_ii(SMAA_MAX_SEARCH_STEPS - 1, 1),
+					     SMAA_MAX_SEARCH_STEPS_DIAG);
 
 	return NodeOperation::determineDependingAreaOfInterest(&newInput, readOperation, output);
 }
