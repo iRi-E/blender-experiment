@@ -60,7 +60,12 @@ extern "C" {
 
 static inline void sample(SocketReader *reader, int x, int y, float color[4])
 {
-	reader->read(color, CLAMPIS(x, 0, reader->getWidth() - 1), CLAMPIS(y, 0, reader->getHeight() -1), NULL);
+	if (x < 0 || x >= reader->getWidth() || y < 0 || y >= reader->getHeight()) {
+		color[0] = color[1] = color[2] = color[3] = 0.0;
+		return;
+	}
+
+	reader->read(color, x, y, NULL);
 }
 
 static void sample_bilinear_vertical(SocketReader *reader, int x, int y, float yoffset, float color[4])
@@ -199,8 +204,8 @@ void SMAALumaEdgeDetectionOperation::executePixel(float output[4], int x, int y,
 	float Dtop  = fabsf(L - Ltop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= m_threshold) ? 1.0f : 0.0f;
-	output[1] = (Dtop >= m_threshold) ? 1.0f : 0.0f;
+	output[0] = (x > 0 && Dleft >= m_threshold) ? 1.0f : 0.0f;
+	output[1] = (y > 0 && Dtop >= m_threshold) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 
@@ -280,8 +285,8 @@ void SMAAColorEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	float Dtop  = color_delta(C, Ctop);
 
 	/* We do the usual threshold: */
-	output[0] = (Dleft >= m_threshold) ? 1.0f : 0.0f;
-	output[1] = (Dtop >= m_threshold) ? 1.0f : 0.0f;
+	output[0] = (x > 0 && Dleft >= m_threshold) ? 1.0f : 0.0f;
+	output[1] = (y > 0 && Dtop >= m_threshold) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 
@@ -351,8 +356,8 @@ void SMAADepthEdgeDetectionOperation::executePixel(float output[4], int x, int y
 	sample(m_valueReader, x - 1, y, left);
 	sample(m_valueReader, x, y - 1, top);
 
-	output[0] = (fabsf(here[0] - left[0]) >= m_threshold) ? 1.0f : 0.0f;
-	output[1] = (fabsf(here[0] - top[0]) >= m_threshold) ? 1.0f : 0.0f;
+	output[0] = (x > 0 && fabsf(here[0] - left[0]) >= m_threshold) ? 1.0f : 0.0f;
+	output[1] = (y > 0 && fabsf(here[0] - top[0]) >= m_threshold) ? 1.0f : 0.0f;
 	output[2] = 0.0f;
 	output[3] = 1.0f;
 }
@@ -486,14 +491,14 @@ bool SMAABlendingWeightCalculationOperation::determineDependingAreaOfInterest(rc
 {
 	rcti newInput;
 
-	newInput.xmax = input->xmax + max_ii(SMAA_MAX_SEARCH_STEPS,
-					     SMAA_MAX_SEARCH_STEPS_DIAG + 1);
-	newInput.xmin = input->xmin - max_ii(max_ii(SMAA_MAX_SEARCH_STEPS - 1, 1),
-					     SMAA_MAX_SEARCH_STEPS_DIAG + 1);
-	newInput.ymax = input->ymax + max_ii(SMAA_MAX_SEARCH_STEPS,
-					     SMAA_MAX_SEARCH_STEPS_DIAG);
-	newInput.ymin = input->ymin - max_ii(max_ii(SMAA_MAX_SEARCH_STEPS - 1, 1),
-					     SMAA_MAX_SEARCH_STEPS_DIAG);
+	newInput.xmax = input->xmax + max(SMAA_MAX_SEARCH_STEPS,
+					  SMAA_MAX_SEARCH_STEPS_DIAG + 1);
+	newInput.xmin = input->xmin - max(max(SMAA_MAX_SEARCH_STEPS - 1, 1),
+					  SMAA_MAX_SEARCH_STEPS_DIAG + 1);
+	newInput.ymax = input->ymax + max(SMAA_MAX_SEARCH_STEPS,
+					  SMAA_MAX_SEARCH_STEPS_DIAG);
+	newInput.ymin = input->ymin - max(max(SMAA_MAX_SEARCH_STEPS - 1, 1),
+					  SMAA_MAX_SEARCH_STEPS_DIAG);
 
 	return NodeOperation::determineDependingAreaOfInterest(&newInput, readOperation, output);
 }
@@ -677,7 +682,7 @@ bool SMAABlendingWeightCalculationOperation::isVerticalSearchUnneeded(int x, int
 
 int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 {
-	int end = max_ii(x - SMAA_MAX_SEARCH_STEPS, -1);
+	int end = x - SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (x > end) {
@@ -697,7 +702,7 @@ int SMAABlendingWeightCalculationOperation::searchXLeft(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 {
-	int end = min_ii(x + SMAA_MAX_SEARCH_STEPS, m_imageReader->getWidth());
+	int end = x + SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (x < end) {
@@ -716,7 +721,7 @@ int SMAABlendingWeightCalculationOperation::searchXRight(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 {
-	int end = max_ii(y - SMAA_MAX_SEARCH_STEPS, -1);
+	int end = y - SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (y > end) {
@@ -736,7 +741,7 @@ int SMAABlendingWeightCalculationOperation::searchYUp(int x, int y)
 
 int SMAABlendingWeightCalculationOperation::searchYDown(int x, int y)
 {
-	int end = min_ii(y + SMAA_MAX_SEARCH_STEPS, m_imageReader->getHeight());
+	int end = y + SMAA_MAX_SEARCH_STEPS;
 	float e[4];
 
 	while (y < end) {
