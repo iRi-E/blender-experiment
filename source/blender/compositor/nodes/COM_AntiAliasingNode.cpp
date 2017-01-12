@@ -59,7 +59,9 @@ void AntiAliasingNode::convertToOperations(NodeConverter &converter, const Compo
 	converter.addOperation(operation2);
 
 	converter.addLink(operation1->getOutputSocket(), operation2->getInputSocket(0));
-	converter.mapOutputSocket(getOutputSocket(2), operation2->getOutputSocket());
+
+	/* this may be needed for debugging */
+	// converter.mapOutputSocket(getOutputSocket(2), operation2->getOutputSocket());
 
 	/* Neighborhood Blending Pixel Shader (Third Pass) */
 	SMAANeighborhoodBlendingOperation *operation3 = new SMAANeighborhoodBlendingOperation();
