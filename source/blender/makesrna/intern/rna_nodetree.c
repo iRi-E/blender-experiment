@@ -6807,7 +6807,7 @@ static void def_cmp_antialiasing(StructRNA *srna)
 	RNA_def_property_float_sdna(prop, NULL, "adapt_fac");
 	RNA_def_property_range(prop, 1.0f, FLT_MAX);
 	RNA_def_property_ui_range(prop, 1.0f, 10.0f, 1.0, 3);
-	RNA_def_property_ui_text(prop, "Local Contrast Adaptation Factor", "Factor that specifies how much to eliminate spurious edges (the value 2.0, for example, means discard a detected edge if there is a neighboring edge that has 2.0 times bigger contrast than the current one)");
+	RNA_def_property_ui_text(prop, "Local Contrast Adaptation Factor", "How much to eliminate spurious edges to avoid artifacts (the larger value makes less active; the value 2.0, for example, means discard a detected edge if there is a neighboring edge that has 2.0 times bigger contrast than the current one)");
 	RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 
 	prop = RNA_def_property(srna, "value_threshold", PROP_FLOAT, PROP_UNSIGNED);
