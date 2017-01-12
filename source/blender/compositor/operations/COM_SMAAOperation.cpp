@@ -580,24 +580,24 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 		if (d1_found) {
 			/* Fetch the crossing edges: */
-			int coords_x = x - d1, coords_y = y + d1;
+			int left = x - d1, bottom = y + d1;
 
-			sample(m_imageReader, coords_x - 1, coords_y, c);
+			sample(m_imageReader, left - 1, bottom, c);
 			if (c[1] > 0.0)
 				e1 += 2;
-			sample(m_imageReader, coords_x, coords_y, c);
+			sample(m_imageReader, left, bottom, c);
 			if (c[0] > 0.0)
 				e1 += 1;
 		}
 
 		if (d2_found) {
 			/* Fetch the crossing edges: */
-			int coords_x = x + d2, coords_y = y - d2;
+			int right = x + d2, top = y - d2;
 
-			sample(m_imageReader, coords_x + 1, coords_y, c);
+			sample(m_imageReader, right + 1, top, c);
 			if (c[1] > 0.0)
 				e2 += 2;
-			sample(m_imageReader, coords_x + 1, coords_y - 1, c);
+			sample(m_imageReader, right + 1, top - 1, c);
 			if (c[0] > 0.0)
 				e2 += 1;
 		}
@@ -622,21 +622,21 @@ void SMAABlendingWeightCalculationOperation::calculateDiagWeights(int x, int y, 
 
 		if (d1_found) {
 			/* Fetch the crossing edges: */
-			int coords_x = x - d1, coords_y = y - d1;
+			int left = x - d1, top = y - d1;
 
-			sample(m_imageReader, coords_x - 1, coords_y, c);
+			sample(m_imageReader, left - 1, top, c);
 			if (c[1] > 0.0)
 				e1 += 2;
-			sample(m_imageReader, coords_x, coords_y - 1, c);
+			sample(m_imageReader, left, top - 1, c);
 			if (c[0] > 0.0)
 				e1 += 1;
 		}
 
 		if (d2_found) {
 			/* Fetch the crossing edges: */
-			int coords_x = x + d2, coords_y = y + d2;
+			int right = x + d2, bottom = y + d2;
 
-			sample(m_imageReader, coords_x + 1, coords_y, c);
+			sample(m_imageReader, right + 1, bottom, c);
 			if (c[1] > 0.0)
 				e2 += 2;
 			if (c[0] > 0.0)
