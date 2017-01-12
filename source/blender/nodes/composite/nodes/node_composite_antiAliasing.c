@@ -42,7 +42,7 @@ static bNodeSocketTemplate cmp_node_antialiasing_in[] = {
 static bNodeSocketTemplate cmp_node_antialiasing_out[] = {
 	{   SOCK_RGBA, 0, N_("Image")},
 	{   SOCK_RGBA, 0, N_("Edges")},
-	{   SOCK_RGBA, 0, N_("Blending Weights")},
+	/* {   SOCK_RGBA, 0, N_("Blending Weights")}, */
 	{   -1, 0, ""	}
 };
 
