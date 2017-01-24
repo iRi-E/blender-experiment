@@ -21,6 +21,7 @@
 #include "COM_DistanceTransformNode.h"
 #include "COM_DistanceTransformOperation.h"
 #include "COM_ExecutionSystem.h"
+#include "COM_ConvertOperation.h"
 
 DistanceTransformNode::DistanceTransformNode(bNode *editorNode) : Node(editorNode)
 {
@@ -36,5 +37,28 @@ void DistanceTransformNode::convertToOperations(NodeConverter &converter, const 
 	converter.addOperation(operation);
 
 	converter.mapInputSocket(getInputSocket(0), operation->getInputSocket(0));
-	converter.mapOutputSocket(getOutputSocket(0), operation->getOutputSocket(0));
+
+	/* Distance */
+	SeparateChannelOperation *operationD = new SeparateChannelOperation();
+	operationD->setChannel(0);
+	converter.addOperation(operationD);
+
+	converter.addLink(operation->getOutputSocket(), operationD->getInputSocket(0));
+	converter.mapOutputSocket(getOutputSocket(0), operationD->getOutputSocket());
+
+	/* Vector X */
+	SeparateChannelOperation *operationX = new SeparateChannelOperation();
+	operationX->setChannel(1);
+	converter.addOperation(operationX);
+
+	converter.addLink(operation->getOutputSocket(), operationX->getInputSocket(0));
+	converter.mapOutputSocket(getOutputSocket(1), operationX->getOutputSocket());
+
+	/* Vector Y */
+	SeparateChannelOperation *operationY = new SeparateChannelOperation();
+	operationY->setChannel(2);
+	converter.addOperation(operationY);
+
+	converter.addLink(operation->getOutputSocket(), operationY->getInputSocket(0));
+	converter.mapOutputSocket(getOutputSocket(2), operationY->getOutputSocket());
 }

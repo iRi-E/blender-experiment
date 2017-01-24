@@ -40,6 +40,8 @@ static bNodeSocketTemplate cmp_node_distance_transform_in[] = {
 };
 static bNodeSocketTemplate cmp_node_distance_transform_out[] = {
 	{	SOCK_FLOAT, 0, N_("Distance")},
+	{	SOCK_FLOAT, 0, N_("Vector X")},
+	{	SOCK_FLOAT, 0, N_("Vector Y")},
 	{	-1, 0, ""	}
 };
 

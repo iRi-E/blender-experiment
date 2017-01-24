@@ -28,17 +28,20 @@ static bool distance_transform_euclidean(int width, int height,
 {
 	int *r = (int *)MEM_callocN(width * sizeof(int), "distance transform horizontal distance");
 	int *f = (int *)MEM_callocN(width * height * sizeof(int), "distance transform square of horizontal distance");
+	int *h = (int *)MEM_callocN(width * height * sizeof(int), "distance transform relative coordinate x");
 	int *v = (int *)MEM_callocN(height * sizeof(int), "distance transform quadratic curve vertices");
+	int *Rx = (int *)MEM_callocN(height * sizeof(int), "distance transform relative coordinate x of quadratic curve vertices");
 	int *z = (int *)MEM_callocN(height * sizeof(int), "distance transform quadratic curve intersections");
 	bool calculated = false;
 
-	if (r != NULL && f != NULL && v != NULL && z != NULL) {
+	if (r != NULL && f != NULL && h != NULL && v != NULL && Rx != NULL && z != NULL) {
 		int x, y;
 
 		/* pass 1: horizontal processing */
 		for (y = 0; y < height; y++) {
 			const float *I = inbuf + y * width;
 			int *F = f + y * width;
+			int *H = h + y * width;
 
 			/* thresholding */
 			for (x = 0; x < width; x++) {
@@ -52,6 +55,7 @@ static bool distance_transform_euclidean(int width, int height,
 					r[x] = 0;
 					// F[x] = 0; /* 0 won't be changed */
 				}
+				// H[x] = 0;
 			}
 
 			/* left to right */
@@ -59,6 +63,7 @@ static bool distance_transform_euclidean(int width, int height,
 				if (F[x] != 0 && F[x - 1] != -1) {
 					r[x] = r[x - 1] + 1;
 					F[x] = F[x - 1] + r[x - 1] + r[x];
+					H[x] = r[x];
 				}
 			}
 
@@ -67,6 +72,7 @@ static bool distance_transform_euclidean(int width, int height,
 				if (F[x] != 0 && F[x + 1] != -1 && r[x] > r[x + 1]) {
 					r[x] = r[x + 1] + 1;
 					F[x] = F[x + 1] + r[x + 1] + r[x];
+					H[x] = -r[x];
 				}
 			}
 		}
@@ -79,6 +85,7 @@ static bool distance_transform_euclidean(int width, int height,
 			for (y = 0; y < height; y++) {
 				if (f[x + y * width] != -1) {
 					v[0] = y;
+					Rx[0] = h[x + y * width];
 					break;
 				}
 			}
@@ -89,14 +96,14 @@ static bool distance_transform_euclidean(int width, int height,
 
 			/* rearrange the quadratic curves so that they give minimum distances */
 			for (y++ ; y < height; y++) {
-				int f_xy = f[x + y * width];
+				int x_y = x + y * width;
 
-				if (f_xy != -1) {
+				if (f[x_y] != -1) {
 					int s;
 
 					while (true) {
 						/* calculate an intersection of two quadratic curves */
-						s = ((f_xy - f[x + v[k] * width]) / (y - v[k]) + y + v[k]) / 2;
+						s = ((f[x_y] - f[x + v[k] * width]) / (y - v[k]) + y + v[k]) / 2;
 
 						/* discard previous z[k] and v[k] if s <= z[k] */
 						if (k == 0 || s > z[k - 1])
@@ -106,6 +113,7 @@ static bool distance_transform_euclidean(int width, int height,
 					z[k] = s;
 					k++;
 					v[k] = y;
+					Rx[k] = h[x_y];
 				}
 			}
 			z[k] = height;
@@ -116,14 +124,20 @@ static bool distance_transform_euclidean(int width, int height,
 				while (z[k] < y)
 					k++;
 				int Ry = y - v[k];
-				outbuf[x + y * width] = sqrtf((float)(Ry * Ry + f[x + v[k] * width]));
+				float *ptr = &outbuf[(x + y * width) * 3];
+				*ptr++ = sqrtf((float)(Ry * Ry + f[x + v[k] * width]));
+				*ptr++ = (float)Rx[k];
+				*ptr   = (float)Ry;
 			}
 		}
 
 		/* is the whole image not masked? */
 		if (x < width) {
-			for (int i = width * height; i > 0; i--)
+			for (int i = width * height; i > 0; i--) {
 				*outbuf++ = FLT_MAX;
+				*outbuf++ = 0.0f;
+				*outbuf++ = 0.0f;
+			}
 		}
 
 		calculated = true;
@@ -131,7 +145,9 @@ static bool distance_transform_euclidean(int width, int height,
 
 	if (r) MEM_freeN(r);
 	if (f) MEM_freeN(f);
+	if (h) MEM_freeN(h);
 	if (v) MEM_freeN(v);
+	if (Rx) MEM_freeN(Rx);
 	if (z) MEM_freeN(z);
 
 	return calculated;
@@ -140,7 +156,7 @@ static bool distance_transform_euclidean(int width, int height,
 DistanceTransformOperation::DistanceTransformOperation() : NodeOperation()
 {
 	this->addInputSocket(COM_DT_VALUE);
-	this->addOutputSocket(COM_DT_VALUE);
+	this->addOutputSocket(COM_DT_VECTOR);
 	this->setComplex(true);
 	this->m_valueReader = NULL;
 	this->m_buffer = NULL;
@@ -168,7 +184,7 @@ void *DistanceTransformOperation::initializeTileData(rcti *rect)
 		unsigned int height = tile->getHeight();
 
 		if (width > 0 && height > 0) {
-			this->m_buffer = (float *)MEM_callocN(width * height * sizeof(float), "distance transform buffer");
+			this->m_buffer = (float *)MEM_callocN(width * height * 3 * sizeof(float), "distance transform buffer");
 			this->m_width = width;
 			this->m_height = height;
 
@@ -186,8 +202,12 @@ void *DistanceTransformOperation::initializeTileData(rcti *rect)
 void DistanceTransformOperation::executePixel(float output[4], int x, int y, void * /*data*/)
 {
 	if (this->m_isCalculated && this->m_buffer) {
-		if (x >= 0 && x < this->m_width && y >= 0 && y < this->m_height)
-			output[0] = this->m_buffer[x + y * this->m_width];
+		if (x >= 0 && x < this->m_width && y >= 0 && y < this->m_height) {
+			float *ptr = &this->m_buffer[(x + y * this->m_width) * 3];
+			output[0] = *ptr++; /* Distance */
+			output[1] = *ptr++; /* Vector X */
+			output[2] = *ptr;   /* Vector Y */
+		}
 	}
 }
 
