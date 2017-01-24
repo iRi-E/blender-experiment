@@ -346,6 +346,7 @@ compositor_node_categories = [
         NodeItem("CompositorNodeSepYCCA"),
         NodeItem("CompositorNodeCombYCCA"),
         NodeItem("CompositorNodeSwitchView"),
+        NodeItem("CompositorNodeDistanceTransform"),
         ]),
     CompositorNodeCategory("CMP_OP_FILTER", "Filter", items=[
         NodeItem("CompositorNodeBlur"),

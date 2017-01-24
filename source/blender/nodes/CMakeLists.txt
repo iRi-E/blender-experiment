@@ -68,6 +68,7 @@ set(SRC
 	composite/nodes/node_composite_directionalblur.c
 	composite/nodes/node_composite_displace.c
 	composite/nodes/node_composite_distanceMatte.c
+	composite/nodes/node_composite_distanceTransform.c
 	composite/nodes/node_composite_filter.c
 	composite/nodes/node_composite_flip.c
 	composite/nodes/node_composite_gamma.c

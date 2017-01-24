@@ -1905,6 +1905,15 @@ static void node_composit_buts_premulkey(uiLayout *layout, bContext *UNUSED(C), 
 	uiItemR(layout, ptr, "mapping", 0, "", ICON_NONE);
 }
 
+static void node_composit_buts_distance_transform(uiLayout *layout, bContext *UNUSED(C), PointerRNA *ptr)
+{
+	uiLayout *col;
+
+	col = uiLayoutColumn(layout, false);
+	uiItemR(col, ptr, "threshold", 0, NULL, ICON_NONE);
+	uiItemR(col, ptr, "invert", 0, NULL, ICON_NONE);
+}
+
 static void node_composit_buts_view_levels(uiLayout *layout, bContext *UNUSED(C), PointerRNA *ptr)
 {
 	uiItemR(layout, ptr, "channel", UI_ITEM_R_EXPAND, NULL, ICON_NONE);
@@ -2629,6 +2638,9 @@ static void node_composit_set_butfunc(bNodeType *ntype)
 			break;
 		case CMP_NODE_PREMULKEY:
 			ntype->draw_buttons = node_composit_buts_premulkey;
+			break;
+		case CMP_NODE_DISTANCE_TRANSFORM:
+			ntype->draw_buttons = node_composit_buts_distance_transform;
 			break;
 		case CMP_NODE_VIEW_LEVELS:
 			ntype->draw_buttons = node_composit_buts_view_levels;

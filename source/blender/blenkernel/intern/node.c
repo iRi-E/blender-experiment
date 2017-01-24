@@ -3475,6 +3475,7 @@ static void registerCompositNodes(void)
 	register_node_type_cmp_sepycca();
 	register_node_type_cmp_combycca();
 	register_node_type_cmp_premulkey();
+	register_node_type_cmp_distance_transform();
 	
 	register_node_type_cmp_diff_matte();
 	register_node_type_cmp_distance_matte();
