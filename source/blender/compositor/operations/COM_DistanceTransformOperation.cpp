@@ -37,7 +37,7 @@ static bool distance_transform_euclidean(int width, int height,
 	if (r != NULL && f != NULL && h != NULL && v != NULL && Rx != NULL && z != NULL) {
 		int x, y;
 
-		/* pass 1: horizontal processing */
+		/* first pass: horizontal processing */
 		for (y = 0; y < height; y++) {
 			const float *I = inbuf + y * width;
 			int *F = f + y * width;
@@ -77,7 +77,7 @@ static bool distance_transform_euclidean(int width, int height,
 			}
 		}
 
-		/* pass 2: vertical processing */
+		/* second pass: vertical processing */
 		for (x = 0; x < width; x++) {
 			int k = 0;
 
@@ -159,9 +159,6 @@ DistanceTransformOperation::DistanceTransformOperation() : NodeOperation()
 	this->addOutputSocket(COM_DT_VECTOR);
 	this->setComplex(true);
 	this->m_valueReader = NULL;
-	this->m_buffer = NULL;
-	this->m_width = 0;
-	this->m_height = 0;
 	this->m_isCalculated = false;
 	this->m_threshold = 0.5f;
 	this->m_invert = false;
@@ -170,40 +167,47 @@ DistanceTransformOperation::DistanceTransformOperation() : NodeOperation()
 void DistanceTransformOperation::initExecution()
 {
 	this->m_valueReader = this->getInputSocketReader(0);
-	NodeOperation::initMutex();
 }
+
+/* small helper to pass data from initializeTileData to executePixel */
+typedef struct tile_info {
+	unsigned int width;
+	unsigned int height;
+	float *buffer;
+} tile_info;
 
 void *DistanceTransformOperation::initializeTileData(rcti *rect)
 {
-	lockMutex();
+	MemoryBuffer *tile = (MemoryBuffer *)this->m_valueReader->initializeTileData(rect);
+	float *inbuf = tile->getBuffer();
+	unsigned int width = tile->getWidth();
+	unsigned int height = tile->getHeight();
 
-	if (!this->m_isCalculated) {
-		MemoryBuffer *tile = (MemoryBuffer *)this->m_valueReader->initializeTileData(rect);
-		float *inbuf = tile->getBuffer();
-		unsigned int width = tile->getWidth();
-		unsigned int height = tile->getHeight();
+	if (width == 0 || height == 0)
+		return NULL;
 
-		if (width > 0 && height > 0) {
-			this->m_buffer = (float *)MEM_callocN(width * height * 3 * sizeof(float), "distance transform buffer");
-			this->m_width = width;
-			this->m_height = height;
+	tile_info *result = (tile_info *)MEM_mallocN(sizeof(tile_info), "distance transform tile");
 
-			if (this->m_buffer)
-				this->m_isCalculated = distance_transform_euclidean(width, height,
-										    this->m_threshold, this->m_invert,
-										    inbuf, this->m_buffer);
-		}
+	if (result) {
+		result->width = width;
+		result->height = height;
+		result->buffer = (float *)MEM_callocN(width * height * 3 * sizeof(float), "distance transform cache");
+
+		if (result->buffer)
+			this->m_isCalculated = distance_transform_euclidean(width, height,
+									    this->m_threshold, this->m_invert,
+									    inbuf, result->buffer);
 	}
 
-	unlockMutex();
-	return NULL;
+	return result;
 }
 
-void DistanceTransformOperation::executePixel(float output[4], int x, int y, void * /*data*/)
+void DistanceTransformOperation::executePixel(float output[4], int x, int y, void *data)
 {
-	if (this->m_isCalculated && this->m_buffer) {
-		if (x >= 0 && x < this->m_width && y >= 0 && y < this->m_height) {
-			float *ptr = &this->m_buffer[(x + y * this->m_width) * 3];
+	if (this->m_isCalculated) {
+		tile_info *tile = (tile_info *)data;
+		if (x >= 0 && x < tile->width && y >= 0 && y < tile->height) {
+			float *ptr = &tile->buffer[(x + y * tile->width) * 3];
 			output[0] = *ptr++; /* Distance */
 			output[1] = *ptr++; /* Vector X */
 			output[2] = *ptr;   /* Vector Y */
@@ -213,20 +217,20 @@ void DistanceTransformOperation::executePixel(float output[4], int x, int y, voi
 
 void DistanceTransformOperation::deinitExecution()
 {
-	lockMutex();
-	if (this->m_buffer)
-		MEM_freeN(this->m_buffer);
-	this->m_isCalculated = false;
-	unlockMutex();
-
 	this->m_valueReader = NULL;
-	NodeOperation::deinitMutex();
+}
+
+void DistanceTransformOperation::deinitializeTileData(rcti * /*rect*/, void *data)
+{
+	tile_info *tile = (tile_info *)data;
+	if (tile->buffer)
+		MEM_freeN(tile->buffer);
+	MEM_freeN(tile);
 }
 
 bool DistanceTransformOperation::determineDependingAreaOfInterest(rcti * /*input*/, ReadBufferOperation *readOperation, rcti *output)
 {
 	rcti valueInput;
-	if (this->m_isCalculated) return false;
 
 	NodeOperation *operation = getInputOperation(0);
 	valueInput.xmax = operation->getWidth();

@@ -25,9 +25,6 @@
 class DistanceTransformOperation : public NodeOperation {
 private:
 	SocketReader *m_valueReader;
-	float *m_buffer;
-	unsigned int m_width;
-	unsigned int m_height;
 	bool m_isCalculated;
 	float m_threshold;
 	bool m_invert;
@@ -49,6 +46,7 @@ public:
 	 * Deinitialize the execution
 	 */
 	void deinitExecution();
+	void deinitializeTileData(rcti *rect, void *data);
 
 	void setThreshold(float threshold) { m_threshold = threshold; }
 	void setInvert(bool invert) { m_invert = invert; }
