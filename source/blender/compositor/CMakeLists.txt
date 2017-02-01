@@ -266,6 +266,9 @@ set(SRC
 	operations/COM_PixelateOperation.cpp
 	operations/COM_PixelateOperation.h
 
+	nodes/COM_DistanceTransformNode.cpp
+	nodes/COM_DistanceTransformNode.h
+
 	# Filter nodes
 	nodes/COM_BilateralBlurNode.cpp
 	nodes/COM_BilateralBlurNode.h
@@ -519,6 +522,8 @@ set(SRC
 	operations/COM_IDMaskOperation.h
 	operations/COM_ConvertOperation.cpp
 	operations/COM_ConvertOperation.h
+	operations/COM_DistanceTransformOperation.cpp
+	operations/COM_DistanceTransformOperation.h
 
 	operations/COM_DotproductOperation.cpp
 	operations/COM_DotproductOperation.h

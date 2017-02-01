@@ -63,6 +63,7 @@ extern "C" {
 #include "COM_DirectionalBlurNode.h"
 #include "COM_DisplaceNode.h"
 #include "COM_DistanceMatteNode.h"
+#include "COM_DistanceTransformNode.h"
 #include "COM_DoubleEdgeMaskNode.h"
 #include "COM_EllipseMaskNode.h"
 #include "COM_ExecutionSystem.h"
@@ -240,6 +241,9 @@ Node *Converter::convert(bNode *b_node)
 			break;
 		case CMP_NODE_MATH:
 			node = new MathNode(b_node);
+			break;
+		case CMP_NODE_DISTANCE_TRANSFORM:
+			node = new DistanceTransformNode(b_node);
 			break;
 		case CMP_NODE_HUE_SAT:
 			node = new HueSaturationValueNode(b_node);

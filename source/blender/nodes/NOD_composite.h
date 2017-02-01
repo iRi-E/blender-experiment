@@ -99,6 +99,7 @@ void register_node_type_cmp_combyuva(void);
 void register_node_type_cmp_sepycca(void);
 void register_node_type_cmp_combycca(void);
 void register_node_type_cmp_premulkey(void);
+void register_node_type_cmp_distance_transform(void);
 
 void register_node_type_cmp_diff_matte(void);
 void register_node_type_cmp_distance_matte(void);

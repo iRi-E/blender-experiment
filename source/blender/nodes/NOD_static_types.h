@@ -186,6 +186,7 @@ DefNode( CompositorNode, CMP_NODE_CROP,           def_cmp_crop,           "CROP"
 DefNode( CompositorNode, CMP_NODE_DBLUR,          def_cmp_dblur,          "DBLUR",          DBlur,            "Directional Blur",  ""              )
 DefNode( CompositorNode, CMP_NODE_BILATERALBLUR,  def_cmp_bilateral_blur, "BILATERALBLUR",  Bilateralblur,    "Bilateral Blur",    ""              )
 DefNode( CompositorNode, CMP_NODE_PREMULKEY,      def_cmp_premul_key,     "PREMULKEY",      PremulKey,        "Alpha Convert",     ""              )
+DefNode( CompositorNode, CMP_NODE_DISTANCE_TRANSFORM, def_cmp_distance_transform, "DISTANCE_TRANSFORM", DistanceTransform, "Distance Transform", "")
 DefNode( CompositorNode, CMP_NODE_GLARE,          def_cmp_glare,          "GLARE",          Glare,            "Glare",             ""              )
 DefNode( CompositorNode, CMP_NODE_TONEMAP,        def_cmp_tonemap,        "TONEMAP",        Tonemap,          "Tonemap",           ""              )
 DefNode( CompositorNode, CMP_NODE_LENSDIST,       def_cmp_lensdist,       "LENSDIST",       Lensdist,         "Lens Distortion",   ""              )
