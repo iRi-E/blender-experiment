@@ -32,8 +32,9 @@ void DistanceTransformNode::convertToOperations(NodeConverter &converter, const 
 {
 	DistanceTransformOperation *operation = new DistanceTransformOperation();
 	bNode *editorNode = this->getbNode();
-	operation->setThreshold(editorNode->custom3);
 	operation->setInvert(editorNode->custom1);
+	operation->setRelative(editorNode->custom2);
+	operation->setThreshold(editorNode->custom3);
 	converter.addOperation(operation);
 
 	converter.mapInputSocket(getInputSocket(0), operation->getInputSocket(0));

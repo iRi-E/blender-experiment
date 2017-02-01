@@ -1910,8 +1910,9 @@ static void node_composit_buts_distance_transform(uiLayout *layout, bContext *UN
 	uiLayout *col;
 
 	col = uiLayoutColumn(layout, false);
-	uiItemR(col, ptr, "threshold", 0, NULL, ICON_NONE);
 	uiItemR(col, ptr, "invert", 0, NULL, ICON_NONE);
+	uiItemR(col, ptr, "relative", 0, NULL, ICON_NONE);
+	uiItemR(col, ptr, "threshold", 0, NULL, ICON_NONE);
 }
 
 static void node_composit_buts_view_levels(uiLayout *layout, bContext *UNUSED(C), PointerRNA *ptr)

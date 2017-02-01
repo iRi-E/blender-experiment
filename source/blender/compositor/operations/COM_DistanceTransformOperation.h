@@ -26,8 +26,10 @@ class DistanceTransformOperation : public NodeOperation {
 private:
 	SocketReader *m_valueReader;
 	bool m_isCalculated;
+	float m_factor;
 	float m_threshold;
 	bool m_invert;
+	bool m_relative;
 public:
 	DistanceTransformOperation();
 
@@ -50,6 +52,7 @@ public:
 
 	void setThreshold(float threshold) { m_threshold = threshold; }
 	void setInvert(bool invert) { m_invert = invert; }
+	void setRelative(bool relative) { m_relative = relative; }
 	bool determineDependingAreaOfInterest(rcti *input, ReadBufferOperation *readOperation, rcti *output);
 };
 

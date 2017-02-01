@@ -160,8 +160,10 @@ DistanceTransformOperation::DistanceTransformOperation() : NodeOperation()
 	this->setComplex(true);
 	this->m_valueReader = NULL;
 	this->m_isCalculated = false;
+	this->m_factor = 1.0f;
 	this->m_threshold = 0.5f;
 	this->m_invert = false;
+	this->m_relative = false;
 }
 
 void DistanceTransformOperation::initExecution()
@@ -186,6 +188,9 @@ void *DistanceTransformOperation::initializeTileData(rcti *rect)
 	if (width == 0 || height == 0)
 		return NULL;
 
+	if (this->m_relative)
+		this->m_factor = 100.0f / max(width, height);
+
 	tile_info *result = (tile_info *)MEM_mallocN(sizeof(tile_info), "distance transform tile");
 
 	if (result) {
@@ -208,9 +213,9 @@ void DistanceTransformOperation::executePixel(float output[4], int x, int y, voi
 		tile_info *tile = (tile_info *)data;
 		if (x >= 0 && x < tile->width && y >= 0 && y < tile->height) {
 			float *ptr = &tile->buffer[(x + y * tile->width) * 3];
-			output[0] = *ptr++; /* Distance */
-			output[1] = *ptr++; /* Vector X */
-			output[2] = *ptr;   /* Vector Y */
+			output[0] = *ptr++ * this->m_factor; /* Distance */
+			output[1] = *ptr++ * this->m_factor; /* Vector X */
+			output[2] = *ptr   * this->m_factor; /* Vector Y */
 		}
 	}
 }
