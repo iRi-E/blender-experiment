@@ -47,8 +47,9 @@ static bNodeSocketTemplate cmp_node_distance_transform_out[] = {
 
 static void node_composit_init_distance_transform(bNodeTree *UNUSED(ntree), bNode *node)
 {
-	node->custom3 = 0.5f;
 	node->custom1 = false;
+	node->custom2 = false;
+	node->custom3 = 0.5f;
 }
 
 void register_node_type_cmp_distance_transform(void)
