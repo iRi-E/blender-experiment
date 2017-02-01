@@ -290,6 +290,8 @@ set(SRC
 	nodes/COM_BokehBlurNode.h
 	nodes/COM_DirectionalBlurNode.cpp
 	nodes/COM_DirectionalBlurNode.h
+	nodes/COM_AntiAliasingNode.cpp
+	nodes/COM_AntiAliasingNode.h
 	operations/COM_GaussianAlphaXBlurOperation.cpp
 	operations/COM_GaussianAlphaXBlurOperation.h
 	operations/COM_GaussianAlphaYBlurOperation.cpp
@@ -509,7 +511,8 @@ set(SRC
 	operations/COM_GlareFogGlowOperation.h
 	operations/COM_SetSamplerOperation.cpp
 	operations/COM_SetSamplerOperation.h
-
+	operations/COM_SMAAOperation.cpp
+	operations/COM_SMAAOperation.h
 
 	#Convert operations
 	operations/COM_IDMaskOperation.cpp
@@ -547,6 +550,23 @@ data_to_c(${CMAKE_CURRENT_SOURCE_DIR}/operations/COM_OpenCLKernels.cl
 
 add_definitions(-DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
 
+set(GENSRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/operations)
+set(GENSRC ${GENSRC_DIR}/COM_SMAAAreaTexture.h)
+add_custom_command(
+	OUTPUT ${GENSRC}
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${GENSRC_DIR}
+	COMMAND "$<TARGET_FILE:smaa_areatex>" ${GENSRC}
+	DEPENDS smaa_areatex
+)
+add_custom_target(smaa_areatex_header
+	SOURCES ${GENSRC}
+)
+list(APPEND SRC
+	${GENSRC}
+)
+unset(GENSRC)
+unset(GENSRC_DIR)
+
 if(WITH_INTERNATIONAL)
 	add_definitions(-DWITH_INTERNATIONAL)
 endif()
@@ -556,3 +576,5 @@ if(WITH_CYCLES AND WITH_CYCLES_DEBUG)
 endif()
 
 blender_add_lib(bf_compositor "${SRC}" "${INC}" "${INC_SYS}")
+
+add_dependencies(bf_compositor smaa_areatex_header)
