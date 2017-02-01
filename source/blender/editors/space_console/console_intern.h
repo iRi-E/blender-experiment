@@ -34,7 +34,7 @@ struct wmOperatorType;
 struct bContext;
 
 /* console_draw.c */
-void console_textview_main(struct SpaceConsole *sc, struct ARegion *ar);
+void console_textview_main(struct SpaceConsole *sc, struct ARegion *ar, int cursor_xy[2]);
 int console_textview_height(struct SpaceConsole *sc, struct ARegion *ar); /* needed to calculate the scrollbar */
 int console_char_pick(struct SpaceConsole *sc, struct ARegion *ar, const int mval[2]);
 

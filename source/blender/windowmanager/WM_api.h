@@ -103,7 +103,19 @@ enum {
 
 struct wmWindow	*WM_window_open(struct bContext *C, const struct rcti *rect);
 struct wmWindow *WM_window_open_temp(struct bContext *C, const struct rcti *rect_init, int type);
-			
+
+			/* input method */
+#ifdef WITH_IM_OVERTHESPOT
+bool		WM_window_IM_is_spot_needed(wmWindow *win);
+#endif
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+void		WM_window_IM_modal_set	(wmWindow *win);
+void		WM_window_IM_modal_unset(wmWindow *win);
+void		WM_window_IM_spot_set	(wmWindow *win, int x, int y, int h);
+void		WM_window_IM_begin	(wmWindow *win);
+void		WM_window_IM_end	(wmWindow *win);
+#endif
+
 			/* returns true if draw method is triple buffer */
 bool		WM_is_draw_triple(struct wmWindow *win);
 
@@ -513,8 +525,8 @@ void        WM_event_ndof_to_quat(const struct wmNDOFMotionData *ndof, float q[4
 float       WM_event_tablet_data(const struct wmEvent *event, int *pen_flip, float tilt[2]);
 bool        WM_event_is_tablet(const struct wmEvent *event);
 
-#ifdef WITH_INPUT_IME
-bool        WM_event_is_ime_switch(const struct wmEvent *event);
+#ifdef WITH_IM_ONTHESPOT
+bool        WM_event_is_im_switch(const struct wmEvent *event);
 #endif
 
 #ifdef __cplusplus

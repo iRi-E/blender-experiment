@@ -1059,15 +1059,33 @@ GHOST_TSuccess GHOST_WindowWin32::endProgressBar()
 }
 
 
-#ifdef WITH_INPUT_IME
-void GHOST_WindowWin32::beginIME(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 w, GHOST_TInt32 h, int completed)
+#ifdef WITH_IM_ONTHESPOT
+void GHOST_WindowWin32::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h)
 {
-	m_imeImput.BeginIME(m_hWnd, GHOST_Rect(x, y - h, x, y), (bool)completed);
+	if (m_im_modal)
+		return;
+
+	/* adjust location of composition window */
+	x += 5;
+	y -= 1;
+
+	m_imeImput.BeginIME(m_hWnd, GHOST_Rect(x, y - h, x, y), false);
 }
 
-
-void GHOST_WindowWin32::endIME()
+void GHOST_WindowWin32::beginIM()
 {
+	if (m_im_modal)
+		return;
+
+	/* coordinate -1 means don't set location */
+	m_imeImput.BeginIME(m_hWnd, GHOST_Rect(-1, -1, 0, 0), true);
+}
+
+void GHOST_WindowWin32::endIM()
+{
+	if (m_im_modal)
+		return;
+
 	m_imeImput.EndIME(m_hWnd);
 }
-#endif /* WITH_INPUT_IME */
+#endif /* WITH_IM_ONTHESPOT */

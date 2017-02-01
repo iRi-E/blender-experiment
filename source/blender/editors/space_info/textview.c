@@ -60,6 +60,7 @@ typedef struct ConsoleDrawContext {
 	int winx;
 	int ymin, ymax;
 	int *xy; // [2]
+	int *cursor_xy; // [2]
 	int *sel; // [2]
 	int *pos_pick; // bottom of view == 0, top of file == combine chars, end of line is lower then start. 
 	const int *mval; // [2]
@@ -118,8 +119,10 @@ static int console_wrap_offsets(const char *str, int len, int width, int *lines,
 /* return 0 if the last line is off the screen
  * should be able to use this for any string type */
 
-static int console_draw_string(ConsoleDrawContext *cdc, const char *str, int str_len,
-                               const unsigned char fg[3], const unsigned char bg[3], const unsigned char bg_sel[4])
+static int console_draw_string(
+        ConsoleDrawContext *cdc, const char *str, int str_len,
+        const unsigned char fg[3], const unsigned char bg[3],
+        const unsigned char cursor[3], const unsigned char bg_sel[4])
 {
 	int tot_lines;            /* total number of lines for wrapping */
 	int *offsets;             /* offsets of line beginnings for wrapping */
@@ -186,6 +189,14 @@ static int console_draw_string(ConsoleDrawContext *cdc, const char *str, int str
 			glRecti(0, cdc->xy[1], cdc->winx, (cdc->xy[1] + (cdc->lheight * tot_lines)));
 		}
 
+		if (cursor) {
+			glColor3ubv(cursor);
+			glRecti(cdc->cursor_xy[0] - 1,
+			        cdc->cursor_xy[1],
+			        cdc->cursor_xy[0] + 1,
+			        cdc->cursor_xy[1] + cdc->lheight);
+		}
+
 		glColor3ubv(fg);
 
 		/* last part needs no clipping */
@@ -234,6 +245,14 @@ static int console_draw_string(ConsoleDrawContext *cdc, const char *str, int str
 			glRecti(0, cdc->xy[1], cdc->winx, cdc->xy[1] + cdc->lheight);
 		}
 
+		if (cursor) {
+			glColor3ubv(cursor);
+			glRecti(cdc->cursor_xy[0] - 1,
+			        cdc->cursor_xy[1],
+			        cdc->cursor_xy[0] + 1,
+			        cdc->cursor_xy[1] + cdc->lheight);
+		}
+
 		glColor3ubv(fg);
 
 		BLF_position(cdc->font_id, cdc->xy[0], cdc->lofs + cdc->xy[1], 0);
@@ -271,6 +290,7 @@ int textview_draw(TextViewContext *tvc, const int draw, int mval[2], void **mous
 	int x_orig = CONSOLE_DRAW_MARGIN, y_orig = CONSOLE_DRAW_MARGIN + tvc->lheight / 6;
 	int xy[2], y_prev;
 	int sel[2] = {-1, -1}; /* defaults disabled */
+	int cursor_xy[2] = {-1, -1}; /* defaults disabled */
 	unsigned char fg[3], bg[3];
 	const int font_id = blf_mono_font;
 
@@ -299,6 +319,7 @@ int textview_draw(TextViewContext *tvc, const int draw, int mval[2], void **mous
 	cdc.ymin = tvc->ymin;
 	cdc.ymax = tvc->ymax;
 	cdc.xy = xy;
+	cdc.cursor_xy = cursor_xy;
 	cdc.sel = sel;
 	cdc.pos_pick = pos_pick;
 	cdc.mval = mval;
@@ -316,9 +337,10 @@ int textview_draw(TextViewContext *tvc, const int draw, int mval[2], void **mous
 
 	if (tvc->begin(tvc)) {
 		unsigned char bg_sel[4] = {0};
+		unsigned char cursor[3] = {0};
 
 		if (draw && tvc->const_colors) {
-			tvc->const_colors(tvc, bg_sel);
+			tvc->const_colors(tvc, bg_sel, cursor);
 		}
 
 		do {
@@ -328,14 +350,19 @@ int textview_draw(TextViewContext *tvc, const int draw, int mval[2], void **mous
 
 			y_prev = xy[1];
 
-			if (draw)
+			if (draw) {
 				color_flag = tvc->line_color(tvc, fg, bg);
+
+				if (tvc->cursor_coords)
+					tvc->cursor_coords(tvc, cursor_xy);
+			}
 
 			tvc->line_get(tvc, &ext_line, &ext_len);
 
 			if (!console_draw_string(&cdc, ext_line, ext_len,
 			                         (color_flag & TVC_LINE_FG) ? fg : NULL,
 			                         (color_flag & TVC_LINE_BG) ? bg : NULL,
+			                         (cursor_xy[0] >= 0) ? cursor : NULL,
 			                         bg_sel))
 			{
 				/* when drawing, if we pass v2d->cur.ymax, then quit */

@@ -49,6 +49,12 @@ set(SRC
 	screen_intern.h
 )
 
+if(WITH_X11)
+	if(WITH_X11_XINPUT)
+		add_definitions(-DWITH_IM_OVERTHESPOT)
+	endif()
+endif()
+
 if(WITH_INTERNATIONAL)
 	add_definitions(-DWITH_INTERNATIONAL)
 endif()

@@ -332,29 +332,51 @@ public:
 
 	virtual float getNativePixelSize(void) = 0;
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_OVERTHESPOT
 	/**
-	 * Enable IME attached to the given window, i.e. allows user-input
-	 * events to be dispatched to the IME.
-	 * \param x Requested x-coordinate of the rectangle
-	 * \param y Requested y-coordinate of the rectangle
-	 * \param w Requested width of the rectangle
-	 * \param h Requested height of the rectangle
-	 * \param complete Whether or not to complete the ongoing composition
-	 * true:  Start a new composition
-	 * false: Move the IME windows to the given position without finishing it.
-	 */
-	virtual void beginIME(
-	        GHOST_TInt32 x, GHOST_TInt32 y,
-	        GHOST_TInt32 w, GHOST_TInt32 h,
-	        int completed) = 0;
+         * Return whether input method needs spot location to be set. Typically,
+         * calling EndIM() and BeginIM() resets the spot location, so the return
+         * value becomes true after that. This function makes sense only for
+         * over-the-spot input style.
+         * \return true if spot location needs to be set, false if not
+         */
+	virtual bool isIMSpotNeeded() = 0;
+#endif
+
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	/**
+         * Start modal input. After this function call, beginIM(), endIM(),
+         * and setIMSpot() do nothing until calling unsetIMModal().
+         */
+	virtual void setIMModal() = 0;
 
 	/**
-	 * Disable the IME attached to the given window, i.e. prohibits any user-input
-	 * events from being dispatched to the IME.
-	 */
-	virtual void endIME() = 0;
-#endif /* WITH_INPUT_IME */
+         * End modal input. After this function call, beginIM(), endIM(),
+         * and setIMSpot() works normally.
+         */
+	virtual void unsetIMModal() = 0;
+
+	/**
+         * Set spot location of input method, used for placing composition window.
+         * This takes effect when the input method server supports over-the-spot or
+         * on-the-spot input style.
+         * \param x Requested x-coordinate that the preedit window will be placed
+         * \param y Requested y-coordinate that the preedit window will be placed
+         */
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h) = 0;
+
+	/**
+         * Enable input method attached to the given window, i.e. allows user-input
+         * events to be dispatched to the input method server.
+         */
+	virtual void beginIM() = 0;
+
+	/**
+         * Disable the input method attached to the given window, i.e. prohibits any
+         * user-input events from being dispatched to the input method server.
+         */
+	virtual void endIM() = 0;
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */
 	
 #ifdef WITH_CXX_GUARDEDALLOC
 	MEM_CXX_CLASS_ALLOC_FUNCS("GHOST:GHOST_IWindow")

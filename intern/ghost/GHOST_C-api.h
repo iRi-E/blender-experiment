@@ -908,29 +908,52 @@ extern int GHOST_UseNativePixels(void);
 extern float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle);
 
 /**
- * Enable IME attached to the given window, i.e. allows user-input
- * events to be dispatched to the IME.
+ * Return whether input method needs spot location to be set. Typically,
+ * calling GHOST_EndIM() and GHOST_BeginIM() resets the spot location,
+ * so the return value becomes true after that. This function makes sense
+ * only for over-the-spot input style.
  * \param windowhandle Window handle of the caller
- * \param x Requested x-coordinate of the rectangle
- * \param y Requested y-coordinate of the rectangle
- * \param w Requested width of the rectangle
- * \param h Requested height of the rectangle
- * \param complete Whether or not to complete the ongoing composition
- * true:  Start a new composition
- * false: Move the IME windows to the given position without finishing it.
+ * \return true if spot location needs to be set, false if not
  */
-extern void GHOST_BeginIME(GHOST_WindowHandle windowhandle,
-                            GHOST_TInt32 x,
-                            GHOST_TInt32 y,
-                            GHOST_TInt32 w,
-                            GHOST_TInt32 h,
-                            int complete);
+extern int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle);
+
 /**
- * Disable the IME attached to the given window, i.e. prohibits any user-input
- * events from being dispatched to the IME.
+ * Start modal input. After this function call, GHOST_BeginIM(), GHOST_EndIM(),
+ * and GHOST_SetIMSpot() do nothing until calling GHOST_UnsetIMModal().
+ * \param windowhandle Window handle of the caller
+ */
+extern void GHOST_SetIMModal(GHOST_WindowHandle windowhandle);
+
+/**
+ * End modal input. After this function call, GHOST_BeginIM(), GHOST_EndIM(),
+ * and GHOST_SetIMSpot() works normally.
+ * \param windowhandle Window handle of the caller
+ */
+extern void GHOST_UnsetIMModal(GHOST_WindowHandle windowhandle);
+
+/**
+ * Set spot location of input method, used for placing composition window.
+ * This takes effect when the input method server supports over-the-spot or
+ * on-the-spot input style.
+ * \param windowhandle Window handle of the caller
+ * \param x Requested x-coordinate that the preedit window will be placed
+ * \param y Requested y-coordinate that the preedit window will be placed
+ */
+extern void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h);
+
+/**
+ * Enable input method attached to the given window, i.e. allows user-input
+ * events to be dispatched to the input method server.
+ * \param windowhandle Window handle of the caller
+ */
+extern void GHOST_BeginIM(GHOST_WindowHandle windowhandle);
+
+/**
+ * Disable the input method attached to the given window, i.e. prohibits any
+ * user-input events from being dispatched to the input method server.
  * \param windowhandle The window handle of the caller
  */
-extern void GHOST_EndIME(GHOST_WindowHandle windowhandle);
+extern void GHOST_EndIM(GHOST_WindowHandle windowhandle);
 
 #ifdef __cplusplus
 }

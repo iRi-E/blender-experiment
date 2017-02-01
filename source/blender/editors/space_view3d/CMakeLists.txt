@@ -68,6 +68,12 @@ set(SRC
 	view3d_intern.h
 )
 
+if(WITH_X11)
+	if(WITH_X11_XINPUT)
+		add_definitions(-DWITH_IM_OVERTHESPOT)
+	endif()
+endif()
+
 if(WITH_PYTHON)
 	blender_include_dirs(../../python)
 	add_definitions(-DWITH_PYTHON)

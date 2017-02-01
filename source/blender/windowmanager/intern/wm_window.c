@@ -49,6 +49,10 @@
 
 #include "BLT_translation.h"
 
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+#  include "BLT_lang.h"
+#endif
+
 #include "BKE_blender.h"
 #include "BKE_context.h"
 #include "BKE_library.h"
@@ -1709,21 +1713,77 @@ bool WM_window_is_fullscreen(wmWindow *win)
 	return win->windowstate == GHOST_kWindowStateFullScreen;
 }
 
-
-#ifdef WITH_INPUT_IME
-/* note: keep in mind wm_window_IME_begin is also used to reposition the IME window */
-void wm_window_IME_begin(wmWindow *win, int x, int y, int w, int h, bool complete)
+#ifdef WITH_IM_OVERTHESPOT
+bool WM_window_IM_is_spot_needed(wmWindow *win)
 {
+	if (!BLT_lang_is_im_supported())
+		return false;
+
 	BLI_assert(win);
 
-	GHOST_BeginIME(win->ghostwin, x, win->sizey - y, w, h, complete);
+	return GHOST_IsIMSpotNeeded(win->ghostwin);
 }
+#endif
 
-void wm_window_IME_end(wmWindow *win)
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+void WM_window_IM_modal_set(wmWindow *win)
 {
-	BLI_assert(win && win->ime_data);
+	if (!BLT_lang_is_im_supported())
+		return;
 
-	GHOST_EndIME(win->ghostwin);
-	win->ime_data = NULL;
+	BLI_assert(win);
+
+	GHOST_SetIMModal(win->ghostwin);
 }
-#endif  /* WITH_INPUT_IME */
+
+void WM_window_IM_modal_unset(wmWindow *win)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+
+	GHOST_UnsetIMModal(win->ghostwin);
+}
+
+void WM_window_IM_spot_set(wmWindow *win, int x, int y, int h)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+
+	GHOST_SetIMSpot(win->ghostwin, x, win->sizey - y, h);
+}
+
+void WM_window_IM_begin(wmWindow *win)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+#ifdef WITH_IM_OVERTHESPOT
+	BLI_assert(win->im_data == NULL);
+#endif
+
+	GHOST_BeginIM(win->ghostwin);
+}
+
+void WM_window_IM_end(wmWindow *win)
+{
+	if (!BLT_lang_is_im_supported())
+		return;
+
+	BLI_assert(win);
+
+#ifdef WITH_IM_ONTHESPOT
+	if (win->im_data)
+#endif
+	{
+		GHOST_EndIM(win->ghostwin);
+#ifdef WITH_IM_ONTHESPOT
+		win->im_data = NULL;
+#endif
+	}
+}
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */

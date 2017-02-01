@@ -39,7 +39,7 @@
 
 #include "GHOST_Window.h"
 #include "GHOST_TaskbarWin32.h"
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 #  include "GHOST_ImeWin32.h"
 #endif
 
@@ -254,16 +254,13 @@ public:
 	/** if the window currently resizing */
 	bool m_inLiveResize;
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 	GHOST_ImeWin32 *getImeInput() {return &m_imeImput;}
 
-	void beginIME(
-	        GHOST_TInt32 x, GHOST_TInt32 y,
-	        GHOST_TInt32 w, GHOST_TInt32 h,
-	        int completed);
-
-	void endIME();
-#endif /* WITH_INPUT_IME */
+	void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h);
+	void beginIM();
+	void endIM();
+#endif /* WITH_IM_ONTHESPOT */
 
 private:
 
@@ -354,7 +351,7 @@ private:
 	/** Hwnd to parent window */
 	GHOST_TEmbedderWindowID m_parentWindowHwnd;
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 	/** Handle input method editors event */
 	GHOST_ImeWin32 m_imeImput;
 #endif

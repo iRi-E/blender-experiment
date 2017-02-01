@@ -295,21 +295,24 @@ public:
 		return 1.0f;
 	}
 
-#ifdef WITH_INPUT_IME
-	virtual void beginIME(GHOST_TInt32 x,
-	                      GHOST_TInt32 y,
-	                      GHOST_TInt32 w,
-	                      GHOST_TInt32 h,
-	                      int completed)
+#ifdef WITH_IM_OVERTHESPOT
+	virtual bool isIMSpotNeeded() = 0;
+#endif
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	void setIMModal()
 	{
-		/* do nothing temporarily if not in windows */
+		m_im_modal = true;
 	}
 
-	virtual void endIME()
+	void unsetIMModal()
 	{
-		/* do nothing temporarily if not in windows */
+		m_im_modal = false;
 	}
-#endif /* WITH_INPUT_IME */
+
+	virtual void setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h) = 0;
+	virtual void beginIM() = 0;
+	virtual void endIM() = 0;
+#endif
 
 protected:
 	/**
@@ -401,6 +404,11 @@ protected:
 	
 	/* OSX only, retina screens */
 	float m_nativePixelSize;
+
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+	/** Whether modal input is ongoing with input method */
+	bool m_im_modal;
+#endif
 
 private:
 	GHOST_Context *m_context;

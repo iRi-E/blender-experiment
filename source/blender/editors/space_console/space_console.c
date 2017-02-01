@@ -45,6 +45,7 @@
 #include "WM_api.h"
 #include "WM_types.h"
 
+#include "UI_interface.h"
 #include "UI_resources.h"
 #include "UI_view2d.h"
 
@@ -221,6 +222,7 @@ static void console_main_region_draw(const bContext *C, ARegion *ar)
 	SpaceConsole *sc = CTX_wm_space_console(C);
 	View2D *v2d = &ar->v2d;
 	View2DScrollers *scrollers;
+	int cursor_xy[2];
 
 	if (BLI_listbase_is_empty(&sc->scrollback))
 		WM_operator_name_call((bContext *)C, "CONSOLE_OT_banner", WM_OP_EXEC_DEFAULT, NULL);
@@ -235,7 +237,7 @@ static void console_main_region_draw(const bContext *C, ARegion *ar)
 	/* data... */
 
 	console_history_verify(C); /* make sure we have some command line */
-	console_textview_main(sc, ar);
+	console_textview_main(sc, ar, cursor_xy);
 	
 	/* reset view matrix */
 	UI_view2d_view_restore(C);
@@ -244,6 +246,12 @@ static void console_main_region_draw(const bContext *C, ARegion *ar)
 	scrollers = UI_view2d_scrollers_calc(C, v2d, V2D_ARG_DUMMY, V2D_ARG_DUMMY, V2D_ARG_DUMMY, V2D_GRID_CLAMP);
 	UI_view2d_scrollers_draw(C, v2d, scrollers);
 	UI_view2d_scrollers_free(scrollers);
+
+#ifdef WITH_IM_OVERTHESPOT
+	if ((cursor_xy[0] != -1) && (CTX_wm_screen(C)->subwinactive == ar->swinid)) {
+		UI_region_im_spot_set(CTX_wm_window(C), ar, cursor_xy[0], cursor_xy[1], sc->lheight);
+	}
+#endif
 }
 
 static void console_operatortypes(void)
@@ -420,8 +428,9 @@ void ED_spacetype_console(void)
 	art->draw = console_main_region_draw;
 	art->cursor = console_cursor;
 	art->listener = console_main_region_listener;
-	
-	
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = ED_region_generic_im_begin;
+#endif
 
 	BLI_addhead(&st->regiontypes, art);
 	

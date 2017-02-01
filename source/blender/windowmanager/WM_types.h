@@ -579,22 +579,22 @@ typedef struct wmOperatorType {
 
 } wmOperatorType;
 
-#ifdef WITH_INPUT_IME
-/* *********** Input Method Editor (IME) *********** */
+#ifdef WITH_IM_ONTHESPOT
+/* *********** Input Method (IM) *********** */
 
-/* similar to GHOST_TEventImeData */
-typedef struct wmIMEData {
+/* similar to GHOST_TEventIMData */
+typedef struct wmIMData {
 	size_t result_len, composite_len;
 
 	char *str_result;           /* utf8 encoding */
 	char *str_composite;        /* utf8 encoding */
 
-	int cursor_pos;             /* cursor position in the IME composition. */
+	int cursor_pos;             /* cursor position in the IM composition. */
 	int sel_start;              /* beginning of the selection */
 	int sel_end;                /* end of the selection */
 
-	bool is_ime_composing;
-} wmIMEData;
+	bool is_im_composing;
+} wmIMData;
 #endif
 
 /* **************** Paint Cursor ******************* */

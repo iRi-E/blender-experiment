@@ -914,21 +914,42 @@ float GHOST_GetNativePixelSize(GHOST_WindowHandle windowhandle)
 	return 1.0f;
 }
 
-#ifdef WITH_INPUT_IME
-
-void GHOST_BeginIME(GHOST_WindowHandle windowhandle,
-                    GHOST_TInt32 x, GHOST_TInt32 y,
-                    GHOST_TInt32 w, GHOST_TInt32 h,
-                    int complete)
+#ifdef WITH_IM_OVERTHESPOT
+int GHOST_IsIMSpotNeeded(GHOST_WindowHandle windowhandle)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->beginIME(x, y, w, h, complete);
+	return window->isIMSpotNeeded();
 }
+#endif
 
-void GHOST_EndIME(GHOST_WindowHandle windowhandle)
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+void GHOST_SetIMModal(GHOST_WindowHandle windowhandle)
 {
 	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
-	window->endIME();
+	window->setIMModal();
 }
 
-#endif  /* WITH_INPUT_IME */
+void GHOST_UnsetIMModal(GHOST_WindowHandle windowhandle)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->unsetIMModal();
+}
+
+void GHOST_SetIMSpot(GHOST_WindowHandle windowhandle, GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 h)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->setIMSpot(x, y, h);
+}
+
+void GHOST_BeginIM(GHOST_WindowHandle windowhandle)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->beginIM();
+}
+
+void GHOST_EndIM(GHOST_WindowHandle windowhandle)
+{
+	GHOST_IWindow *window = (GHOST_IWindow *) windowhandle;
+	window->endIM();
+}
+#endif /* defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT) */

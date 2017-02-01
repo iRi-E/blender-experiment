@@ -53,6 +53,12 @@ set(SRC
 
 add_definitions(${GL_DEFINITIONS})
 
+if(WITH_X11)
+	if(WITH_X11_XINPUT)
+		add_definitions(-DWITH_IM_OVERTHESPOT)
+	endif()
+endif()
+
 if(WITH_PYTHON)
 	list(APPEND INC
 		../../python

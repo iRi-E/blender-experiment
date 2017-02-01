@@ -338,7 +338,12 @@ GHOST_WindowX11(GHOST_SystemX11 *system,
       m_dropTarget(NULL),
 #endif
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+      m_xim_style(XIMPreeditNothing | XIMStatusNothing), /* root window style */
       m_xic(NULL),
+      m_focused(false),
+      m_xim_needed(false),
+      m_xim_spot_x(-1),
+      m_xim_spot_y(-1),
 #endif
       m_valid_setup(false),
       m_is_debug_context(is_debug)
@@ -612,15 +617,57 @@ bool GHOST_WindowX11::createX11_XIC()
 	if (!xim)
 		return false;
 
+	XIMStyles *supported_styles;
+	XIMStyle style;
+	unsigned short i;
+	/* use over-the-spot style if available */
+	XGetIMValues(xim, XNQueryInputStyle, &supported_styles, NULL);
+	for (i = 0; i < supported_styles->count_styles; i++) {
+		style = supported_styles->supported_styles[i];
+		if ((style & XIMPreeditPosition) && (style & XIMStatusNothing)) {
+			m_xim_style = style;
+			GHOST_PRINT("XIM: over-the-spot style chosen\n");
+			break;
+		}
+	}
+	XFree(supported_styles);
+
+	XRectangle area = {0, 0, 0, 0};
+	XPoint spot = {0, 0};
+	int missing_count;
+	char **missing_list, *def_string;
+	XFontSet fs = NULL;
+	XVaNestedList attr = NULL;
 	XICCallback destroy;
+
+	if (m_xim_style & XIMPreeditPosition) {
+		fs = XCreateFontSet(m_display, "-*-*-*-*-*-*-*-*-*-*-*-*-*-*",
+				    &missing_list, &missing_count, &def_string);
+		if (missing_list)
+			XFreeStringList(missing_list);
+
+		attr = XVaCreateNestedList(
+		        0,
+		        XNArea, &area,
+		        XNSpotLocation, &spot,
+		        XNFontSet, fs,
+		        NULL);
+	}
 	destroy.callback = (XICProc)destroyICCallback;
 	destroy.client_data = (XPointer)&m_xic;
 	m_xic = XCreateIC(xim, XNClientWindow, m_window, XNFocusWindow, m_window,
-	                  XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+	                  XNInputStyle, m_xim_style,
 	                  XNResourceName, GHOST_X11_RES_NAME,
 	                  XNResourceClass, GHOST_X11_RES_CLASS,
 	                  XNDestroyCallback, &destroy,
+	                  /* keep last */
+	                  attr ? XNPreeditAttributes : NULL, attr,
 	                  NULL);
+	if (attr)
+		XFree(attr);
+	if (fs)
+		XFreeFontSet(m_display, fs);
+
 	if (!m_xic)
 		return false;
 
@@ -635,7 +682,90 @@ bool GHOST_WindowX11::createX11_XIC()
 	             PropertyChangeMask | KeymapStateMask | fevent);
 	return true;
 }
-#endif
+
+static void unsetICFocus(XIC xic)
+{
+	if (!xic)
+		return;
+
+	/* Input context must be reset when input focus is unset, otherwise
+	 * the language bar doesn't disappear when input focus is unset.
+	 */
+	char *str = XmbResetIC(xic);
+	if (str)
+		XFree(str);
+
+	XUnsetICFocus(xic);
+}
+
+void GHOST_WindowX11::setX11_ICFocus(bool focused)
+{
+	if (m_xic) {
+		if (focused && m_xim_needed) {
+			XSetICFocus(m_xic);
+			m_xim_spot_x = m_xim_spot_y = -1;
+		} else {
+			unsetICFocus(m_xic);
+		}
+	}
+	m_focused = focused;
+}
+
+bool GHOST_WindowX11::isIMSpotNeeded()
+{
+	return (m_xim_spot_x == -1);
+}
+
+void GHOST_WindowX11::setIMSpot(GHOST_TInt32 x, GHOST_TInt32 y, GHOST_TInt32 /* h */)
+{
+	if (m_im_modal)
+		return;
+
+	if (!m_xic || (m_xim_style & XIMPreeditNothing))
+		return;
+
+	if (!(m_focused && m_xim_needed))
+		return;
+
+	if ((m_xim_spot_x != -1) &&
+	    (x == m_xim_spot_x) && (y == m_xim_spot_y))
+		return;
+
+	/* Note: This code takes effect only for over-the-spot style.
+	 * If using on-the-spot style, XIM server will ignore the request.
+	 */
+	XPoint spot = {(short)x, (short)y};
+	XVaNestedList attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	XSetICValues(m_xic, XNPreeditAttributes, attr, NULL);
+	XFree(attr);
+
+	m_xim_spot_x = x;
+	m_xim_spot_y = y;
+}
+
+void GHOST_WindowX11::beginIM()
+{
+	if (m_im_modal)
+		return;
+
+	if (m_xic && m_focused && !m_xim_needed) {
+		XSetICFocus(m_xic);
+		m_xim_spot_x = m_xim_spot_y = -1;
+	}
+	m_xim_needed = true;
+}
+
+void GHOST_WindowX11::endIM()
+{
+	if (m_im_modal)
+		return;
+
+	if (m_xic && m_focused && m_xim_needed) {
+		unsetICFocus(m_xic);
+	}
+	m_xim_needed = false;
+}
+#endif /* defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING) */
 
 #ifdef WITH_X11_XINPUT
 void GHOST_WindowX11::refreshXInputDevices()
