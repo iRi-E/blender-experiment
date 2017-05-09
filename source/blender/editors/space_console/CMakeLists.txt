@@ -43,6 +43,12 @@ set(SRC
 	console_intern.h
 )
 
+if(WITH_X11)
+	if(WITH_X11_XINPUT)
+		add_definitions(-DWITH_IM_OVERTHESPOT)
+	endif()
+endif()
+
 if(WITH_PYTHON)
 	add_definitions(-DWITH_PYTHON)
 endif()

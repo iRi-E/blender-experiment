@@ -62,6 +62,11 @@ void BLT_lang_locale_explode(
 /* Get EnumPropertyItem's for translations menu. */
 struct EnumPropertyItem *BLT_lang_RNA_enum_properties(void);
 
+/* Test if the translation context allows IM input - used to
+ * avoid weird character drawing if IM inputs non-ascii chars.
+ */
+bool BLT_lang_is_im_supported(void);
+
 #ifdef __cplusplus
 };
 #endif

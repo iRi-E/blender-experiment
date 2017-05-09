@@ -54,6 +54,9 @@ GHOST_Window::GHOST_Window(
       m_cursorShape(GHOST_kStandardCursorDefault),
       m_wantStereoVisual(wantStereoVisual),
       m_wantNumOfAASamples(wantNumOfAASamples),
+#if defined(WITH_IM_OVERTHESPOT) || defined(WITH_IM_ONTHESPOT)
+      m_im_modal(false),
+#endif
       m_context(new GHOST_ContextNone(false, 0))
 {
 	m_isUnsavedChanges = false;

@@ -1107,7 +1107,7 @@ static void draw_suggestion_list(const SpaceText *st, const TextDrawContext *tdc
 
 /*********************** draw cursor ************************/
 
-static void draw_text_decoration(SpaceText *st, ARegion *ar)
+static void draw_text_decoration(SpaceText *st, ARegion *ar, int cursor_xy[2])
 {
 	Text *text = st->text;
 	int vcurl, vcurc, vsell, vselc, hidden = 0;
@@ -1219,9 +1219,13 @@ static void draw_text_decoration(SpaceText *st, ARegion *ar)
 		/* Draw the cursor itself (we draw the sel. cursor as this is the leading edge) */
 		x = st->showlinenrs ? TXT_OFFSET + TEXTXLOC : TXT_OFFSET;
 		x += vselc * st->cwidth;
-		y = ar->winy - vsell * lheight;
+		y = ar->winy - vsell * lheight - lheight;
 
 		immUniformThemeColor(TH_HILITE);
+
+		/* return pixel coordinates of bottom-left of the character */
+		cursor_xy[0] = x;
+		cursor_xy[1] = y;
 
 		if (st->overwrite) {
 			char ch = text->sell->line[text->selc];
@@ -1230,12 +1234,14 @@ static void draw_text_decoration(SpaceText *st, ARegion *ar)
 			w = st->cwidth;
 			if (ch == '\t') w *= st->tabnumber - (vselc + st->left) % st->tabnumber;
 
-			immRecti(pos, x, y - lheight - 1, x + w, y - lheight + 1);
+			immRecti(pos, x, y - 1, x + w, y + 1);
 		}
 		else {
-			immRecti(pos, x - 1, y, x + 1, y - lheight);
+			immRecti(pos, x - 1, y + lheight, x + 1, y);
 		}
 	}
+	else
+		cursor_xy[0] = cursor_xy[1] = -1;
 
 	immUnbindProgram();
 }
@@ -1369,7 +1375,7 @@ static void draw_brackets(const SpaceText *st, const TextDrawContext *tdc, ARegi
 
 /*********************** main region drawing *************************/
 
-void draw_text_main(SpaceText *st, ARegion *ar)
+void draw_text_main(SpaceText *st, ARegion *ar, int cursor_xy[2])
 {
 	TextDrawContext tdc = {0};
 	Text *text = st->text;
@@ -1457,7 +1463,7 @@ void draw_text_main(SpaceText *st, ARegion *ar)
 	winx = ar->winx - TXT_SCROLL_WIDTH;
 
 	/* draw cursor, margin, selection and highlight */
-	draw_text_decoration(st, ar);
+	draw_text_decoration(st, ar, cursor_xy);
 
 	/* draw the text */
 	UI_FontThemeColor(tdc.font_id, TH_TEXT);

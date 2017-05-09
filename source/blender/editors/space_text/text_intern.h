@@ -42,7 +42,7 @@ struct TextLine;
 struct wmOperatorType;
 
 /* text_draw.c */
-void draw_text_main(struct SpaceText *st, struct ARegion *ar);
+void draw_text_main(struct SpaceText *st, struct ARegion *ar, int cursor_xy[2]);
 
 void text_update_line_edited(struct TextLine *line);
 void text_update_edited(struct Text *text);

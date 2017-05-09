@@ -27,4 +27,10 @@ if(WITH_FREESTYLE)
 	add_definitions(-DWITH_FREESTYLE)
 endif()
 
+if(WIN32)
+	if(WITH_INPUT_IME)
+		add_definitions(-DWITH_IM_ONTHESPOT)
+	endif()
+endif()
+
 add_subdirectory(intern)

@@ -79,6 +79,9 @@
 
 #include "UI_interface.h"
 #include "UI_resources.h"
+#ifdef WITH_IM_OVERTHESPOT
+#  include "UI_interface.h"
+#endif
 
 #ifdef WITH_PYTHON
 #  include "BPY_extern.h"
@@ -1449,6 +1452,22 @@ static void view3d_id_remap(ScrArea *sa, SpaceLink *slink, ID *old_id, ID *new_i
 	}
 }
 
+#ifdef WITH_IM_OVERTHESPOT
+static bool view3d_im_begin(const bContext *C, ARegion *ar)
+{
+	wmWindow *win = CTX_wm_window(C);
+	Object *obedit = CTX_data_edit_object(C);
+
+	if (obedit && obedit->type == OB_FONT) {
+		WM_window_IM_begin(win);
+		UI_region_im_spot_set(win, ar, 0, 0, 0);
+		return true;
+	}
+
+	return false;
+}
+#endif
+
 /* only called once, from space/spacetypes.c */
 void ED_spacetype_view3d(void)
 {
@@ -1484,6 +1503,9 @@ void ED_spacetype_view3d(void)
 	art->message_subscribe = view3d_main_region_message_subscribe;
 	art->cursor = view3d_main_region_cursor;
 	art->lock = 1;   /* can become flag, see BKE_spacedata_draw_locks */
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 
 	/* regions: listview/buttons */
@@ -1494,6 +1516,9 @@ void ED_spacetype_view3d(void)
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_buttons_region_init;
 	art->draw = view3d_buttons_region_draw;
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 
 	view3d_buttons_register(art);
@@ -1509,6 +1534,9 @@ void ED_spacetype_view3d(void)
 	art->snap_size = ED_region_generic_tools_region_snap_size;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 
 	/* regions: header */
@@ -1520,10 +1548,16 @@ void ED_spacetype_view3d(void)
 	art->init = view3d_header_region_init;
 	art->draw = view3d_header_region_draw;
 	art->message_subscribe = view3d_header_region_message_subscribe;
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 
 	/* regions: hud */
 	art = ED_area_type_hud(st->spaceid);
+#ifdef WITH_IM_OVERTHESPOT
+	art->im_begin = view3d_im_begin;
+#endif
 	BLI_addhead(&st->regiontypes, art);
 
 	BKE_spacetype_register(st);

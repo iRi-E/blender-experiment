@@ -173,10 +173,9 @@ enum {
 
 #define WM_KEYCONFIG_STR_DEFAULT "blender"
 
-/* IME is win32 only! */
-#ifndef WIN32
+#ifndef WITH_IM_ONTHESPOT
 #  ifdef __GNUC__
-#    define ime_data ime_data __attribute__ ((deprecated))
+#    define im_data im_data __attribute__ ((deprecated))
 #  endif
 #endif
 
@@ -222,9 +221,9 @@ typedef struct wmWindow {
 
 	struct wmGesture *tweak;      /* internal for wm_operators.c */
 
-	/* Input Method Editor data - complex character input (esp. for asian character input)
+	/* Input Method data - complex character input (esp. for asian character input)
 	 * Currently WIN32, runtime-only data */
-	struct wmIMEData *ime_data;
+	struct wmIMData *im_data;
 
 	ListBase queue;               /* all events (ghost level events were handled) */
 	ListBase handlers;            /* window+screen handlers, handled last */
@@ -241,8 +240,8 @@ typedef struct wmWindow {
 	void *cursor_keymap_status;
 } wmWindow;
 
-#ifdef ime_data
-#  undef ime_data
+#ifdef im_data
+#  undef im_data
 #endif
 
 /* These two Lines with # tell makesdna this struct can be excluded. */

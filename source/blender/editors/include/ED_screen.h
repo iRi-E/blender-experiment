@@ -114,6 +114,10 @@ bool    ED_region_is_overlap(int spacetype, int regiontype);
 int     ED_region_snap_size_test(const struct ARegion *ar);
 bool    ED_region_snap_size_apply(struct ARegion *ar, int snap_flag);
 
+#ifdef WITH_IM_OVERTHESPOT
+bool    ED_region_generic_im_begin(const struct bContext *C, struct ARegion *ar);
+#endif
+
 /* message_bus callbacks */
 void ED_region_do_msg_notify_tag_redraw(
         struct bContext *C, struct wmMsgSubscribeKey *msg_key, struct wmMsgSubscribeValue *msg_val);

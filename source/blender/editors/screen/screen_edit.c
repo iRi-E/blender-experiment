@@ -37,6 +37,7 @@
 #include "DNA_scene_types.h"
 #include "DNA_workspace_types.h"
 #include "DNA_userdef_types.h"
+#include "DNA_space_types.h"
 
 #include "BLI_math.h"
 #include "BLI_blenlib.h"
@@ -651,6 +652,13 @@ void ED_screen_set_active_region(bContext *C, wmWindow *win, const int xy[2])
 			for (ar = sa->regionbase.first; ar; ar = ar->next) {
 				if (BLI_rcti_isect_pt_v(&ar->winrct, xy)) {
 					scr->active_region = ar;
+#ifdef WITH_IM_OVERTHESPOT
+					if (old_ar != scr->active_region) {
+						WM_window_IM_end(win);
+						if (C && ar->type && ar->type->im_begin)
+							ar->type->im_begin(C, ar);
+					}
+#endif
 					break;
 				}
 			}

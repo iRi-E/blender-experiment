@@ -516,6 +516,15 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 
 	UI_SetTheme(sa ? sa->spacetype : 0, at->regionid);
 
+#ifdef WITH_IM_OVERTHESPOT
+	/* input method might need to be activate/deactivate for unusual reason
+	 * (e.g. change space type in active region, change screen, toggle fullscreen, etc.) */
+	if (CTX_wm_screen(C)->active_region == ar) {
+		if (!(at->im_begin && at->im_begin(C, ar)))
+			WM_window_IM_end(win);
+	}
+#endif
+
 	if (sa && area_is_pseudo_minimized(sa)) {
 		UI_ThemeClearColor(TH_EDITOR_OUTLINE);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -596,6 +605,15 @@ void ED_region_do_draw(bContext *C, ARegion *ar)
 		ED_region_message_subscribe(C, workspace, scene, screen, sa, ar, mbus);
 	}
 }
+
+#ifdef WITH_IM_OVERTHESPOT
+bool ED_region_generic_im_begin(const bContext *C, ARegion *UNUSED(ar))
+{
+	WM_window_IM_begin(CTX_wm_window(C));
+
+	return true;
+}
+#endif
 
 /* **********************************
  * maybe silly, but let's try for now

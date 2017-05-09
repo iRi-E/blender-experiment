@@ -60,7 +60,7 @@
 #include "GPU_matrix.h"
 #include "GPU_state.h"
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 #  include "WM_types.h"
 #endif
 
@@ -1719,14 +1719,14 @@ static void ui_text_clip_right_label(uiFontStyle *fstyle, uiBut *but, const rcti
 		BLF_disable(fstyle->uifont_id, BLF_KERNING_DEFAULT);
 }
 
-#ifdef WITH_INPUT_IME
-static void widget_draw_text_ime_underline(
+#ifdef WITH_IM_ONTHESPOT
+static void widget_draw_text_im_underline(
         uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *but, const rcti *rect,
-        const wmIMEData *ime_data, const char *drawstr)
+        const wmIMData *im_data, const char *drawstr)
 {
 	int ofs_x, width;
 	int rect_x = BLI_rcti_size_x(rect);
-	int sel_start = ime_data->sel_start, sel_end = ime_data->sel_end;
+	int sel_start = im_data->sel_start, sel_end = im_data->sel_end;
 	float fcol[4];
 
 	if (drawstr[0] != 0) {
@@ -1739,7 +1739,7 @@ static void widget_draw_text_ime_underline(
 
 		width = BLF_width(
 		        fstyle->uifont_id, drawstr + but->ofs,
-		        ime_data->composite_len + but->pos - but->ofs);
+		        im_data->composite_len + but->pos - but->ofs);
 
 		rgba_uchar_to_float(fcol, wcol->text);
 		UI_draw_text_underline(rect->xmin + ofs_x, rect->ymin + 6 * U.pixelsize, min_ii(width, rect_x - 2) - ofs_x, 1, fcol);
@@ -1764,7 +1764,7 @@ static void widget_draw_text_ime_underline(
 		}
 	}
 }
-#endif  /* WITH_INPUT_IME */
+#endif  /* WITH_IM_ONTHESPOT */
 
 static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *but, rcti *rect)
 {
@@ -1773,8 +1773,8 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 	const char *drawstr_right = NULL;
 	bool use_right_only = false;
 
-#ifdef WITH_INPUT_IME
-	const wmIMEData *ime_data;
+#ifdef WITH_IM_ONTHESPOT
+	const wmIMData *im_data;
 #endif
 
 	UI_fontstyle_set(fstyle);
@@ -1805,15 +1805,15 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 			 * we rely on string being NULL terminated. */
 			drawstr_left_len = INT_MAX;
 
-#ifdef WITH_INPUT_IME
+#ifdef WITH_IM_ONTHESPOT
 			/* FIXME, IME is modifying 'const char *drawstr! */
-			ime_data = ui_but_ime_data_get(but);
+			im_data = ui_but_im_data_get(but);
 
-			if (ime_data && ime_data->composite_len) {
+			if (im_data && im_data->composite_len) {
 				/* insert composite string into cursor pos */
 				BLI_snprintf(
 				        (char *)drawstr, UI_MAX_DRAW_STR, "%s%s%s",
-				        but->editstr, ime_data->str_composite,
+				        but->editstr, im_data->str_composite,
 				        but->editstr + but->pos);
 			}
 			else
@@ -1865,10 +1865,10 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 		/* text cursor */
 		but_pos_ofs = but->pos;
 
-#ifdef WITH_INPUT_IME
-		/* if is ime compositing, move the cursor */
-		if (ime_data && ime_data->composite_len && ime_data->cursor_pos != -1) {
-			but_pos_ofs += ime_data->cursor_pos;
+#ifdef WITH_IM_ONTHESPOT
+		/* if is IM compositing, move the cursor */
+		if (im_data && im_data->composite_len && im_data->cursor_pos != -1) {
+			but_pos_ofs += im_data->cursor_pos;
 		}
 #endif
 
@@ -1897,17 +1897,26 @@ static void widget_draw_text(uiFontStyle *fstyle, uiWidgetColors *wcol, uiBut *b
 			immRecti(pos, rect->xmin + t, ty, tx, rect->ymax - 2);
 
 			immUnbindProgram();
+
+#ifdef WITH_IM_OVERTHESPOT
+			/* over-the-spot style input needs coordinates of composition window every time
+			 * the cursor is drawn, because preedit text is drawn in the composition window
+			 * and there is no way to know if the preedit is empty or not. */
+			/* XXX python3 allows non-ascii variable name. is this if() really needed...? */
+			if (!ELEM(but->type, UI_BTYPE_NUM, UI_BTYPE_NUM_SLIDER))
+				ui_but_im_spot_set(but, tx, ty, rect->ymax - 2 - ty);
+#endif
 		}
 
-#ifdef WITH_INPUT_IME
-		if (ime_data && ime_data->composite_len) {
-			/* ime cursor following */
+#ifdef WITH_IM_ONTHESPOT
+		if (im_data && im_data->composite_len) {
+			/* IM cursor following */
 			if (but->pos >= but->ofs) {
-				ui_but_ime_reposition(but, tx + 5, ty + 3, false);
+				ui_but_im_spot_set(but, tx, ty, rect->ymax - 2 - ty);
 			}
 
 			/* composite underline */
-			widget_draw_text_ime_underline(fstyle, wcol, but, rect, ime_data, drawstr);
+			widget_draw_text_im_underline(fstyle, wcol, but, rect, im_data, drawstr);
 		}
 #endif
 	}

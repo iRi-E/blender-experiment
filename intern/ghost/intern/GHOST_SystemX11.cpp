@@ -678,14 +678,27 @@ processEvents(
 							/* we can assume the window has input focus
 							 * here, because key events are received only
 							 * when the window is focused. */
-							XSetICFocus(window->getX11_XIC());
+							window->setX11_ICFocus(true);
 					}
 				}
 			}
 
 			/* dispatch event to XIM server */
 			if ((XFilterEvent(&xevent, (Window)NULL) == True)) {
-				/* do nothing now, the event is consumed by XIM. */
+				/* do nothing now, the event is consumed by XIM. this triggers
+				 * setting spot location, may cause redrawing active region to calculate
+				 * its coordinates. */
+				GHOST_WindowX11 * window = findGhostWindow(xevent.xany.window);
+				if (window) {
+					pushEvent(new GHOST_EventKey(
+							  getMilliSeconds(),
+							  GHOST_kEventIMComposition,
+							  window,
+							  GHOST_kKeyUnknown,
+							  '\0',
+							  NULL));
+					anyProcessed = true;
+				}
 				continue;
 			}
 #endif
@@ -1277,13 +1290,7 @@ GHOST_SystemX11::processEvent(XEvent *xe)
 			                         GHOST_kEventWindowActivate : GHOST_kEventWindowDeactivate;
 
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-			XIC xic = window->getX11_XIC();
-			if (xic) {
-				if (xe->type == FocusIn)
-					XSetICFocus(xic);
-				else
-					XUnsetICFocus(xic);
-			}
+			window->setX11_ICFocus(xe->type == FocusIn ? true : false);
 #endif
 
 			g_event = new

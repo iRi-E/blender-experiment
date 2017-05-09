@@ -1325,4 +1325,9 @@ void UI_widgetbase_draw_cache_end(void);
 /* Support click-drag motion which presses the button and closes a popover (like a menu). */
 #define USE_UI_POPOVER_ONCE
 
+/* Input method */
+#ifdef WITH_IM_OVERTHESPOT
+void UI_region_im_spot_set(struct wmWindow *win, struct ARegion *ar, int x, int y, int h);
+#endif
+
 #endif  /* __UI_INTERFACE_H__ */
