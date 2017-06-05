@@ -104,7 +104,7 @@ enum {
 struct wmWindow	*WM_window_open(struct bContext *C, const struct rcti *rect);
 struct wmWindow *WM_window_open_temp(struct bContext *C, int x, int y, int sizex, int sizey, int type);
 void             WM_window_set_dpi(wmWindow *win);
-			
+
 			/* input method */
 #ifdef WITH_IM_OVERTHESPOT
 bool		WM_window_IM_is_spot_needed(wmWindow *win);
